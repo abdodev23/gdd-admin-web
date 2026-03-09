@@ -100,7 +100,7 @@ export default function RequestsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40">{card.label}</p>
-                <p className="font-medino text-2xl text-gdd-black mt-1">{card.count}</p>
+                <p className="font-equip font-medium text-2xl text-gdd-black mt-1">{card.count}</p>
               </div>
               <card.icon className={`w-8 h-8 ${card.color} opacity-30`} />
             </div>

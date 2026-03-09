@@ -35,7 +35,7 @@ export default function StatsCard({ icon: Icon, label, value, trend, className, 
         )}
       </div>
       <div className="mt-4">
-        <p className="font-medino text-3xl text-gdd-black">{value}</p>
+        <p className="font-equip font-medium text-3xl text-gdd-black">{value}</p>
         <p className="mt-1 font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">
           {label}
         </p>

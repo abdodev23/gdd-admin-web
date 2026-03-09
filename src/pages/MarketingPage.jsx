@@ -231,7 +231,7 @@ export default function MarketingPage() {
         {selectedEmail && (
           <div className="space-y-6">
             <div>
-              <h3 className="font-medino text-lg text-gdd-black mb-1">{selectedEmail.subject}</h3>
+              <h3 className="font-equip font-medium text-lg text-gdd-black mb-1">{selectedEmail.subject}</h3>
               <div className="flex items-center gap-3 mt-2">
                 <span className={cn(
                   'inline-flex items-center px-2.5 py-0.5 text-[10px] font-equip font-medium uppercase tracking-widest-plus rounded-full',
@@ -266,7 +266,7 @@ export default function MarketingPage() {
                     <Eye className="w-4 h-4 text-status-green" />
                     <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Open Rate</p>
                   </div>
-                  <p className="font-medino text-2xl text-gdd-black">{selectedEmail.openRate}%</p>
+                  <p className="font-equip font-medium text-2xl text-gdd-black">{selectedEmail.openRate}%</p>
                   <div className="w-full h-2 bg-gdd-black/5 rounded-full overflow-hidden mt-2">
                     <div
                       className="h-full bg-status-green rounded-full"
@@ -279,7 +279,7 @@ export default function MarketingPage() {
                     <MousePointerClick className="w-4 h-4 text-status-blue" />
                     <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Click Rate</p>
                   </div>
-                  <p className="font-medino text-2xl text-gdd-black">{selectedEmail.clickRate}%</p>
+                  <p className="font-equip font-medium text-2xl text-gdd-black">{selectedEmail.clickRate}%</p>
                   <div className="w-full h-2 bg-gdd-black/5 rounded-full overflow-hidden mt-2">
                     <div
                       className="h-full bg-status-blue rounded-full"
@@ -300,7 +300,7 @@ export default function MarketingPage() {
                   <div className="w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Mail className="w-6 h-6 text-gold" />
                   </div>
-                  <h4 className="font-medino text-lg text-gdd-black mb-2">{selectedEmail.subject}</h4>
+                  <h4 className="font-equip font-medium text-lg text-gdd-black mb-2">{selectedEmail.subject}</h4>
                   <p className="font-equip text-sm text-gdd-black/50 leading-relaxed">
                     This is a preview of the <span className="font-medium">{selectedEmail.template}</span> email
                     sent to <span className="font-medium">{selectedEmail.recipientList}</span>.

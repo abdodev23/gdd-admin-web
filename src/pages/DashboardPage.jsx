@@ -53,7 +53,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return (
     <div className="bg-gdd-black text-white px-3 py-2 rounded-sm shadow-lg">
       <p className="font-equip text-xs text-white/60">{label}</p>
-      <p className="font-medino text-sm">{formatCurrency(payload[0].value)}</p>
+      <p className="font-equip font-medium text-sm">{formatCurrency(payload[0].value)}</p>
     </div>
   )
 }
@@ -107,7 +107,7 @@ export default function DashboardPage() {
                 return (
                   <div className="bg-gdd-black text-white px-3 py-2 rounded-sm shadow-lg">
                     <p className="font-equip text-xs text-white/60">{payload[0].payload.tier}</p>
-                    <p className="font-medino text-sm">{payload[0].value} bookings</p>
+                    <p className="font-equip font-medium text-sm">{payload[0].value} bookings</p>
                   </div>
                 )
               }} />
@@ -138,7 +138,7 @@ export default function DashboardPage() {
                 return (
                   <div className="bg-gdd-black text-white px-3 py-2 rounded-sm shadow-lg">
                     <p className="font-equip text-xs text-white/60">{d.name}</p>
-                    <p className="font-medino text-sm">{d.value} / {d.total}</p>
+                    <p className="font-equip font-medium text-sm">{d.value} / {d.total}</p>
                   </div>
                 )
               }} />

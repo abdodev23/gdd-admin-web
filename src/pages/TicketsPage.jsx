@@ -99,7 +99,7 @@ export default function TicketsPage() {
                     <h3 className="font-medino text-xl text-gdd-black">
                       {ticket.name}
                     </h3>
-                    <p className="font-medino text-2xl text-gdd-black mt-1">
+                    <p className="font-equip font-medium text-2xl text-gdd-black mt-1">
                       ${ticket.price}
                     </p>
                   </div>
@@ -282,7 +282,7 @@ function StatItem({ label, value }) {
       <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">
         {label}
       </p>
-      <p className="font-medino text-lg text-gdd-black">{value}</p>
+      <p className="font-equip font-medium text-lg text-gdd-black">{value}</p>
     </div>
   )
 }

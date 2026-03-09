@@ -91,7 +91,7 @@ export default function EventsPage() {
                       <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">
                         {dateInfo.weekday}
                       </p>
-                      <p className="font-medino text-3xl text-gdd-black leading-none mt-1">
+                      <p className="font-equip font-medium text-3xl text-gdd-black leading-none mt-1">
                         {dateInfo.day}
                       </p>
                       <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40 mt-1">

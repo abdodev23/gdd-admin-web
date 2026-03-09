@@ -67,7 +67,7 @@ export default function ExperiencesPage() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h2 className="font-medino text-xl text-gdd-black">{pkg.name}</h2>
-                <p className="font-medino text-2xl text-gold mt-1">{formatCurrency(pkg.price)}</p>
+                <p className="font-equip font-medium text-2xl text-gold mt-1">{formatCurrency(pkg.price)}</p>
               </div>
               <button
                 onClick={handleOpen}
@@ -134,7 +134,7 @@ export default function ExperiencesPage() {
                 Total Bookings
               </span>
               <StatusBadge status="confirmed" className="!text-xs !px-3 !py-1" />
-              <span className="font-medino text-lg text-gdd-black">{pkg.totalBookings}</span>
+              <span className="font-equip font-medium text-lg text-gdd-black">{pkg.totalBookings}</span>
             </div>
           </div>
         </div>

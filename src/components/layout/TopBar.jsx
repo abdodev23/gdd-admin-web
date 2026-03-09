@@ -36,7 +36,7 @@ export default function TopBar() {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <h2 className="font-medino text-lg text-gdd-black">{pageName}</h2>
+        <h2 className="font-equip font-medium text-lg text-gdd-black">{pageName}</h2>
       </div>
 
       <div className="flex items-center gap-4">

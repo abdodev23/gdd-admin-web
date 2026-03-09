@@ -29,7 +29,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
             transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <div className="flex items-center justify-between px-6 py-4 border-b border-gdd-black/5">
-              <h2 className="font-medino text-lg text-gdd-black">{title}</h2>
+              <h2 className="font-equip font-medium text-lg text-gdd-black">{title}</h2>
               <button
                 onClick={onClose}
                 className="p-1 text-gdd-black/30 hover:text-gdd-black transition-colors"

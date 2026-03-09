@@ -170,7 +170,7 @@ export default function HotelsPage() {
                 </div>
 
                 {/* Price */}
-                <p className="font-medino text-xl text-gdd-black mb-3">
+                <p className="font-equip font-medium text-xl text-gdd-black mb-3">
                   {formatCurrency(hotel.pricePerNight)}
                   <span className="font-equip text-xs text-gdd-black/40 ml-1">
                     / night

@@ -271,7 +271,7 @@ export default function BookingsPage() {
                 )}
                 <div className="flex justify-between font-equip text-sm font-medium text-gdd-black border-t border-gdd-black/10 pt-2">
                   <span>Total</span>
-                  <span className="font-medino text-lg">
+                  <span className="font-equip font-medium text-lg">
                     {formatCurrency(selectedBooking.total)}
                   </span>
                 </div>

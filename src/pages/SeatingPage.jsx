@@ -99,7 +99,7 @@ export default function SeatingPage() {
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: section.color }}
                 />
-                <h3 className="font-medino text-lg text-gdd-black">
+                <h3 className="font-equip font-medium text-lg text-gdd-black">
                   {section.label}
                 </h3>
                 <span className="font-equip text-xs text-gdd-black/40 ml-auto">
@@ -108,19 +108,19 @@ export default function SeatingPage() {
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center bg-sand-light/30 rounded-sm py-2">
-                  <p className="font-medino text-lg text-gdd-black">{sold}</p>
+                  <p className="font-equip font-medium text-lg text-gdd-black">{sold}</p>
                   <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">
                     Sold
                   </p>
                 </div>
                 <div className="text-center bg-sand-light/30 rounded-sm py-2">
-                  <p className="font-medino text-lg text-gdd-black">{reserved}</p>
+                  <p className="font-equip font-medium text-lg text-gdd-black">{reserved}</p>
                   <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">
                     Reserved
                   </p>
                 </div>
                 <div className="text-center bg-sand-light/30 rounded-sm py-2">
-                  <p className="font-medino text-lg text-gdd-black">{available}</p>
+                  <p className="font-equip font-medium text-lg text-gdd-black">{available}</p>
                   <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">
                     Available
                   </p>

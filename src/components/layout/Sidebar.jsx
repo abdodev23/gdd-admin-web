@@ -42,8 +42,8 @@ function SidebarContent({ onClose }) {
       {/* Logo */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
         <div className="flex items-center gap-3">
-          <img src="/images/logos/GDD_Logo_White_NoBG.png" alt="GDD" className="h-7" />
-          <span className="font-equip text-[9px] tracking-widest-plus uppercase text-gold">Admin</span>
+          <img src="/images/logos/2026 GDD_Logomark_White.png" alt="GDD" className="h-7" />
+          <span className="font-equip text-xs tracking-widest-plus uppercase text-white">Admin</span>
         </div>
         {onClose && (
           <button onClick={onClose} className="lg:hidden text-white/40 hover:text-white">

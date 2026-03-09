@@ -11,14 +11,14 @@ export default function DataTable({ columns, data, onRowClick, emptyMessage = 'N
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full border-collapse">
         <thead>
-          <tr className="border-b border-gdd-black/10">
+          <tr className="bg-sand-light/40">
             {columns.map((col) => (
               <th
                 key={col.key}
                 className={cn(
-                  'px-4 py-3 text-left font-equip font-medium text-[10px] tracking-widest-plus uppercase text-gdd-black/40',
+                  'px-5 py-3.5 text-left font-equip font-medium text-[10px] tracking-widest-plus uppercase text-gdd-black/50 border-b border-gdd-black/10 first:rounded-tl-sm last:rounded-tr-sm',
                   col.className
                 )}
               >
@@ -33,12 +33,19 @@ export default function DataTable({ columns, data, onRowClick, emptyMessage = 'N
               key={row.id || rowIndex}
               onClick={() => onRowClick?.(row)}
               className={cn(
-                'border-b border-gdd-black/5 transition-colors',
-                onRowClick && 'cursor-pointer hover:bg-sand-light/50'
+                'border-b border-gdd-black/5 transition-all duration-150',
+                onRowClick && 'cursor-pointer hover:bg-gold/[0.03]',
+                rowIndex % 2 === 1 && 'bg-sand-light/20'
               )}
             >
               {columns.map((col) => (
-                <td key={col.key} className={cn('px-4 py-3 font-equip text-sm text-gdd-black/70', col.cellClassName)}>
+                <td
+                  key={col.key}
+                  className={cn(
+                    'px-5 py-3.5 font-equip text-sm text-gdd-black/70',
+                    col.cellClassName
+                  )}
+                >
                   {col.render ? col.render(row[col.key], row) : row[col.key]}
                 </td>
               ))}

@@ -94,7 +94,7 @@ export default function TransfersPage() {
               </div>
 
               {/* Price */}
-              <p className="font-medino text-2xl text-gold mb-4">{formatCurrency(transfer.price)}<span className="font-equip text-xs text-gdd-black/40 ml-1">round trip</span></p>
+              <p className="font-equip font-medium text-2xl text-gold mb-4">{formatCurrency(transfer.price)}<span className="font-equip text-xs text-gdd-black/40 ml-1">round trip</span></p>
 
               {/* Description */}
               <p className="font-equip text-sm text-gdd-black/60 mb-6 leading-relaxed">{transfer.description}</p>
@@ -118,11 +118,11 @@ export default function TransfersPage() {
               <div className="flex items-center gap-6 pt-4 border-t border-gdd-black/5">
                 <div>
                   <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Total Bookings</p>
-                  <p className="font-medino text-lg text-gdd-black mt-0.5">{transfer.totalBookings}</p>
+                  <p className="font-equip font-medium text-lg text-gdd-black mt-0.5">{transfer.totalBookings}</p>
                 </div>
                 <div>
                   <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Max Passengers</p>
-                  <p className="font-medino text-lg text-gdd-black mt-0.5">{transfer.maxPassengers}</p>
+                  <p className="font-equip font-medium text-lg text-gdd-black mt-0.5">{transfer.maxPassengers}</p>
                 </div>
               </div>
             </div>
