@@ -11,14 +11,14 @@ export default function DataTable({ columns, data, onRowClick, emptyMessage = 'N
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+      <table className="w-full">
         <thead>
-          <tr className="bg-sand-light/40">
+          <tr className="border-b border-gdd-black/10">
             {columns.map((col) => (
               <th
                 key={col.key}
                 className={cn(
-                  'px-5 py-3.5 text-left font-equip font-medium text-[10px] tracking-widest-plus uppercase text-gdd-black/50 border-b border-gdd-black/10 first:rounded-tl-sm last:rounded-tr-sm',
+                  'px-4 py-3 text-left font-equip font-medium text-[10px] tracking-widest-plus uppercase text-gdd-black/40',
                   col.className
                 )}
               >
@@ -33,16 +33,20 @@ export default function DataTable({ columns, data, onRowClick, emptyMessage = 'N
               key={row.id || rowIndex}
               onClick={() => onRowClick?.(row)}
               className={cn(
-                'border-b border-gdd-black/5 transition-all duration-150',
-                onRowClick && 'cursor-pointer hover:bg-gold/[0.03]',
-                rowIndex % 2 === 1 && 'bg-sand-light/20'
+                'group transition-all duration-200',
+                'border-b border-gdd-black/[0.04]',
+                rowIndex % 2 === 0 ? 'bg-white' : 'bg-sand-light/25',
+                onRowClick && 'cursor-pointer hover:bg-gold/[0.06] hover:shadow-[inset_3px_0_0_0_#D4985A]',
               )}
             >
-              {columns.map((col) => (
+              {columns.map((col, colIndex) => (
                 <td
                   key={col.key}
                   className={cn(
-                    'px-5 py-3.5 font-equip text-sm text-gdd-black/70',
+                    'px-5 py-4 font-equip text-sm text-gdd-black/60',
+                    'border-r border-gdd-black/[0.03] last:border-r-0',
+                    colIndex === 0 && 'text-gdd-black/80',
+                    onRowClick && 'group-hover:text-gdd-black/80',
                     col.cellClassName
                   )}
                 >
@@ -53,6 +57,13 @@ export default function DataTable({ columns, data, onRowClick, emptyMessage = 'N
           ))}
         </tbody>
       </table>
+
+      {/* Footer row count */}
+      <div className="px-5 py-2.5 bg-sand-light/30 border-t border-gdd-black/[0.06] rounded-b-sm">
+        <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/30">
+          {data.length} {data.length === 1 ? 'record' : 'records'}
+        </p>
+      </div>
     </div>
   )
 }
