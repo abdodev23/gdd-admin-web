@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@import "./styles/fonts.css";
+
+@theme {
+  --color-sand-light: #EBEBE4;
+  --color-sand: #CCBEAA;
+  --color-gold: #D4985A;
+  --color-gold-deep: #A25723;
+  --color-gold-foil: #C5A44E;
+  --color-gdd-black: #151516;
+
+  --color-status-green: #22c55e;
+  --color-status-red: #ef4444;
+  --color-status-blue: #3b82f6;
+  --color-status-yellow: #eab308;
+
+  --font-medino: 'Medino', 'Georgia', serif;
+  --font-equip: 'Equip', 'Helvetica Neue', sans-serif;
+
+  --letter-spacing-widest-plus: 0.25em;
+  --letter-spacing-editorial: 0.15em;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-equip);
+    font-weight: 300;
+    color: var(--color-gdd-black);
+    background-color: var(--color-sand-light);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: var(--color-gold);
+    color: white;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-sand-light);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-sand);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gold);
+  }
+}

@@ -1,0 +1,7 @@
+export const sightseeing = [
+  { id: 'great-pyramids', name: 'Great Pyramids of Giza', duration: 'Full day', price: 120, currency: 'USD', description: 'Explore the last standing wonder of the ancient world.', highlights: ['Guided pyramid tour', 'Sphinx visit', 'Panoramic photo stop'], image: '/images/dance/MEL_4520.jpg', totalBookings: 156 },
+  { id: 'old-cairo', name: 'Old Cairo', duration: 'Half day', price: 80, currency: 'USD', description: 'Walk through centuries of history in Islamic and Coptic Cairo.', highlights: ['Ben Ezra Synagogue', 'Hanging Church', 'Amr Ibn Al-As Mosque'], image: '/images/dance/MEL_4520.jpg', totalBookings: 98 },
+  { id: 'kom-ombo', name: 'Kom Ombo', duration: 'Full day', price: 150, currency: 'USD', description: 'Visit the unique double temple dedicated to Sobek and Horus.', highlights: ['Double temple tour', 'Crocodile Museum', 'Nile views'], image: '/images/dance/MEL_4520.jpg', totalBookings: 42 },
+  { id: 'valley-of-kings', name: 'Valley of the Kings', duration: 'Full day', price: 180, currency: 'USD', description: 'Discover royal tombs of ancient pharaohs in Luxor.', highlights: ['Royal tombs', 'Hatshepsut Temple', 'Colossi of Memnon'], image: '/images/dance/MEL_4520.jpg', totalBookings: 67 },
+  { id: 'nile-cruise', name: 'Nile River Cruise', duration: '2 nights', price: 450, currency: 'USD', description: 'Sail the Nile in luxury between Luxor and Aswan.', highlights: ['Luxury cabin', 'All meals included', 'Temple visits'], image: '/images/dance/MEL_4520.jpg', totalBookings: 31 },
+]
