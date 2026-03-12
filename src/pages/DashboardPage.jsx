@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { DollarSign, Users, Ticket, BarChart3, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts'
 import useDataStore from '@/store/useDataStore'
 import StatsCard from '@/components/ui/StatsCard'
 import StatusBadge from '@/components/ui/StatusBadge'
@@ -87,8 +87,9 @@ export default function DashboardPage() {
                   <stop offset="95%" stopColor="#D4985A" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="month" tickLine={false} axisLine={false} className="font-equip text-[10px]" tick={{ fill: '#15151640' }} />
-              <YAxis tickLine={false} axisLine={false} className="font-equip text-[10px]" tick={{ fill: '#15151640' }} tickFormatter={(v) => `$${v / 1000}k`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#15151608" vertical={false} />
+              <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: '#15151660', fontSize: 11, fontFamily: 'Equip' }} dy={8} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fill: '#15151660', fontSize: 11, fontFamily: 'Equip' }} tickFormatter={(v) => v === 0 ? '$0' : `$${v / 1000}k`} width={45} />
               <Tooltip content={<CustomTooltip />} />
               <Area type="monotone" dataKey="revenue" stroke="#D4985A" strokeWidth={2} fill="url(#goldGradient)" />
             </AreaChart>
@@ -100,8 +101,9 @@ export default function DashboardPage() {
           <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-4">Bookings by Tier</h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={bookingsByTier} barSize={32}>
-              <XAxis dataKey="tier" tickLine={false} axisLine={false} className="font-equip text-[10px]" tick={{ fill: '#15151640' }} />
-              <YAxis tickLine={false} axisLine={false} className="font-equip text-[10px]" tick={{ fill: '#15151640' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#15151608" vertical={false} />
+              <XAxis dataKey="tier" tickLine={false} axisLine={false} tick={{ fill: '#15151660', fontSize: 11, fontFamily: 'Equip' }} dy={8} />
+              <YAxis tickLine={false} axisLine={false} tick={{ fill: '#15151660', fontSize: 11, fontFamily: 'Equip' }} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v} width={35} />
               <Tooltip content={({ active, payload }) => {
                 if (!active || !payload?.length) return null
                 return (
@@ -135,10 +137,12 @@ export default function DashboardPage() {
               <Tooltip content={({ active, payload }) => {
                 if (!active || !payload?.length) return null
                 const d = payload[0].payload
+                const pct = Math.round((d.value / d.total) * 100)
                 return (
                   <div className="bg-gdd-black text-white px-3 py-2 rounded-sm shadow-lg">
                     <p className="font-equip text-xs text-white/60">{d.name}</p>
-                    <p className="font-equip font-medium text-sm">{d.value} / {d.total}</p>
+                    <p className="font-equip font-medium text-sm">{d.value.toLocaleString()} / {d.total.toLocaleString()}</p>
+                    <p className="font-equip text-xs text-white/40">{pct}% occupied</p>
                   </div>
                 )
               }} />
