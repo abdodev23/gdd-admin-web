@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, BookOpen, Calendar, Ticket, Grid3X3,
   Building2, Compass, MapPin, Car, Tag, Mail, Crown,
-  MessageSquare, Users, Settings, X,
+  MessageSquare, Users, Settings, X, BarChart2, ArrowLeftRight,
 } from 'lucide-react'
 import useAdminStore from '@/store/useAdminStore'
 import { cn } from '@/utils/cn'
@@ -20,9 +20,11 @@ const navItems = [
   ]},
   { group: 'Packages', items: [
     { to: '/hotels', icon: Building2, label: 'Hotels' },
+    { to: '/hotels/guests', icon: BarChart2, label: 'Hotels Guests Report' },
     { to: '/experiences', icon: Compass, label: 'Experiences' },
     { to: '/activities', icon: MapPin, label: 'Activities' },
     { to: '/transfers', icon: Car, label: 'Transfers' },
+    { to: '/transfers/requests', icon: ArrowLeftRight, label: 'Requested Transfers' },
   ]},
   { group: 'Marketing', items: [
     { to: '/promos', icon: Tag, label: 'Promo Codes' },

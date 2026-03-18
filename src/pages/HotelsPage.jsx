@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Star, MapPin, BedDouble } from 'lucide-react'
+import { Plus, Star, BedDouble, Users } from 'lucide-react'
 import useDataStore from '@/store/useDataStore'
 import PageHeader from '@/components/ui/PageHeader'
 import Modal from '@/components/ui/Modal'
@@ -35,6 +35,7 @@ const emptyForm = {
   view: 'city',
   totalRooms: '',
   bookedRooms: 0,
+  guests: 0,
   cancellationPolicy: '',
   amenities: '',
   description: '',
@@ -56,6 +57,7 @@ export default function HotelsPage() {
       view: hotel.view,
       totalRooms: hotel.totalRooms,
       bookedRooms: hotel.bookedRooms,
+      guests: hotel.guests ?? 0,
       cancellationPolicy: hotel.cancellationPolicy,
       amenities: hotel.amenities.join(', '),
       description: hotel.description,
@@ -75,6 +77,7 @@ export default function HotelsPage() {
       pricePerNight: parseFloat(form.pricePerNight),
       view: form.view,
       totalRooms: parseInt(form.totalRooms, 10),
+      guests: parseInt(form.guests, 10) || 0,
       cancellationPolicy: form.cancellationPolicy,
       amenities: form.amenities.split(',').map((s) => s.trim()).filter(Boolean),
       description: form.description,
@@ -198,6 +201,14 @@ export default function HotelsPage() {
                   </div>
                 </div>
 
+                {/* Guests */}
+                <div className="flex items-center gap-1.5 mb-3">
+                  <Users className="w-3.5 h-3.5 text-gdd-black/30" />
+                  <span className="font-equip text-xs text-gdd-black/50">
+                    {hotel.guests ?? 0} current guests
+                  </span>
+                </div>
+
                 {/* Amenities */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {hotel.amenities.slice(0, 5).map((amenity) => (
@@ -302,6 +313,14 @@ export default function HotelsPage() {
               />
             </FormField>
           </div>
+          <FormField label="Current Guests">
+            <input
+              type="number"
+              value={form.guests}
+              onChange={(e) => setForm({ ...form, guests: e.target.value })}
+              className="w-full px-4 py-2 bg-white border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold"
+            />
+          </FormField>
           <FormField label="Cancellation Policy">
             <input
               type="text"

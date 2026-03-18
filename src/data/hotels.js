@@ -12,6 +12,7 @@ export const hotels = [
     amenities: ['Pool', 'Spa', 'Restaurant', 'Bar', 'Fitness Center', 'Free WiFi'],
     totalRooms: 50,
     bookedRooms: 34,
+    guests: 87,
     availableDateRanges: [{ from: '2026-10-01', to: '2026-11-30' }],
   },
   {
@@ -27,6 +28,7 @@ export const hotels = [
     amenities: ['Pool', 'Spa', 'Multiple Restaurants', 'Bar', 'Fitness Center', 'Concierge', 'Free WiFi'],
     totalRooms: 40,
     bookedRooms: 28,
+    guests: 54,
     availableDateRanges: [{ from: '2026-10-01', to: '2026-11-30' }],
   },
   {
@@ -42,6 +44,7 @@ export const hotels = [
     amenities: ['Pool', 'Spa', 'Restaurant', 'Bar', 'Fitness Center', 'Free WiFi'],
     totalRooms: 35,
     bookedRooms: 19,
+    guests: 38,
     availableDateRanges: [{ from: '2026-10-01', to: '2026-11-30' }],
   },
   {
@@ -57,6 +60,7 @@ export const hotels = [
     amenities: ['Pool', 'Spa', 'Multiple Restaurants', 'Garden', 'Fitness Center', 'Free WiFi'],
     totalRooms: 45,
     bookedRooms: 31,
+    guests: 62,
     availableDateRanges: [{ from: '2026-10-01', to: '2026-11-30' }],
   },
   {
@@ -72,6 +76,7 @@ export const hotels = [
     amenities: ['Restaurant', 'Bar', 'Fitness Center', 'Free WiFi', 'Business Center'],
     totalRooms: 60,
     bookedRooms: 22,
+    guests: 41,
     availableDateRanges: [{ from: '2026-10-01', to: '2026-11-30' }],
   },
   {
@@ -87,6 +92,7 @@ export const hotels = [
     amenities: ['Pool', 'Spa', 'Multiple Restaurants', 'Bar', 'Fitness Center', 'Free WiFi'],
     totalRooms: 38,
     bookedRooms: 25,
+    guests: 49,
     availableDateRanges: [{ from: '2026-10-01', to: '2026-11-30' }],
   },
   {
@@ -102,6 +108,7 @@ export const hotels = [
     amenities: ['Pool', 'Spa', 'Restaurant', 'Bar', 'Fitness Center', 'Garden', 'Free WiFi'],
     totalRooms: 42,
     bookedRooms: 18,
+    guests: 35,
     availableDateRanges: [{ from: '2026-10-01', to: '2026-11-30' }],
   },
 ]

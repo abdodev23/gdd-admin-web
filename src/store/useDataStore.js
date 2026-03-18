@@ -28,6 +28,40 @@ const useDataStore = create((set, get) => ({
   vipAllocations: [...mockVipAllocations],
   requests: [...mockRequests],
   users: [...mockUsers],
+  paymentLinks: [],
+
+  generatePaymentLink: (requestId, amount) => {
+    const url = `https://pay.galadedanza.com/link/${requestId}`
+    const link = { url, amount, status: 'pending', createdAt: new Date().toISOString() }
+    set((state) => ({
+      requests: state.requests.map((r) =>
+        r.id === requestId ? { ...r, paymentLink: link } : r
+      ),
+      paymentLinks: [...state.paymentLinks, { id: `pl-${Date.now()}`, requestId, ...link }],
+    }))
+    return link
+  },
+
+  markPaymentLinkPaid: (requestId) =>
+    set((state) => ({
+      requests: state.requests.map((r) =>
+        r.id === requestId && r.paymentLink
+          ? { ...r, paymentLink: { ...r.paymentLink, status: 'paid' } }
+          : r
+      ),
+      paymentLinks: state.paymentLinks.map((pl) =>
+        pl.requestId === requestId ? { ...pl, status: 'paid' } : pl
+      ),
+    })),
+
+  saveProposal: (requestId, proposal) =>
+    set((state) => ({
+      requests: state.requests.map((r) =>
+        r.id === requestId
+          ? { ...r, proposal: { ...proposal, createdAt: new Date().toISOString() } }
+          : r
+      ),
+    })),
 
   addItem: (collection, item) =>
     set((state) => ({
