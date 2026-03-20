@@ -6,6 +6,7 @@ import PageHeader from '@/components/ui/PageHeader'
 import StatusBadge from '@/components/ui/StatusBadge'
 import StatsCard from '@/components/ui/StatsCard'
 import Modal from '@/components/ui/Modal'
+import ImageUpload from '@/components/ui/ImageUpload'
 import { formatCurrency } from '@/utils/formatCurrency'
 
 const fadeUp = {
@@ -208,17 +209,10 @@ export default function ExperiencesPage() {
                 className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold"
               />
             </div>
-            <div>
-              <label className="block font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">
-                Image Path
-              </label>
-              <input
-                type="text"
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
-                className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold"
-              />
-            </div>
+            <ImageUpload
+              value={form.image}
+              onChange={(url) => setForm({ ...form, image: url })}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

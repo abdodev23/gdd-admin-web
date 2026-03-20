@@ -12,7 +12,7 @@ export const mockRequests = [
     emailSentAt: '2026-01-20T14:35:00Z',
     status: 'resolved',
     createdAt: '2026-01-20T14:30:00Z',
-    proposal: { description: 'Halal dining arranged with hotel. Dedicated prayer space confirmed at venue.', quotationAmount: 0, createdAt: '2026-01-22T10:00:00Z' },
+    proposal: { description: 'Halal dining arranged with hotel. Dedicated prayer space confirmed at venue.', quotationAmount: 0, currency: 'USD', createdAt: '2026-01-22T10:00:00Z' },
     paymentLink: null,
   },
   {
@@ -28,7 +28,7 @@ export const mockRequests = [
     emailSentAt: '2026-01-28T09:20:00Z',
     status: 'in-progress',
     createdAt: '2026-01-28T09:15:00Z',
-    proposal: { description: 'In-room celebration package including cake, champagne, and florals.', quotationAmount: 450, createdAt: '2026-01-30T15:00:00Z' },
+    proposal: { description: 'In-room celebration package including cake, champagne, and florals.', quotationAmount: 450, currency: 'USD', createdAt: '2026-01-30T15:00:00Z' },
     paymentLink: { url: 'https://pay.galadedanza.com/link/req-002', amount: 450, status: 'pending', createdAt: '2026-01-31T09:00:00Z' },
   },
   {
@@ -44,7 +44,7 @@ export const mockRequests = [
     emailSentAt: '2026-02-01T11:50:00Z',
     status: 'resolved',
     createdAt: '2026-02-01T11:45:00Z',
-    proposal: { description: 'Wheelchair-accessible room confirmed. Accessible transfer vehicle arranged.', quotationAmount: 0, createdAt: '2026-02-03T09:00:00Z' },
+    proposal: { description: 'Wheelchair-accessible room confirmed. Accessible transfer vehicle arranged.', quotationAmount: 0, currency: 'USD', createdAt: '2026-02-03T09:00:00Z' },
     paymentLink: null,
   },
   {

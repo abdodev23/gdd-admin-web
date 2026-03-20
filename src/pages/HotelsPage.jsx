@@ -4,6 +4,7 @@ import { Plus, Star, BedDouble, Users } from 'lucide-react'
 import useDataStore from '@/store/useDataStore'
 import PageHeader from '@/components/ui/PageHeader'
 import Modal from '@/components/ui/Modal'
+import ImageUpload from '@/components/ui/ImageUpload'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { cn } from '@/utils/cn'
 
@@ -339,6 +340,10 @@ export default function HotelsPage() {
               className="w-full px-4 py-2 bg-white border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold resize-none"
             />
           </FormField>
+          <ImageUpload
+            value={form.image}
+            onChange={(url) => setForm({ ...form, image: url })}
+          />
           <div className="flex justify-end gap-3 pt-2">
             <button
               onClick={() => {

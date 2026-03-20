@@ -66,7 +66,7 @@ export default function RequestsPage() {
   const [search, setSearch] = useState('')
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [activeTab, setActiveTab] = useState('communication')
-  const [proposalForm, setProposalForm] = useState({ description: '', quotationAmount: '' })
+  const [proposalForm, setProposalForm] = useState({ description: '', quotationAmount: '', currency: 'USD' })
   const [copiedLink, setCopiedLink] = useState(false)
 
   const counts = useMemo(() => ({
@@ -98,13 +98,13 @@ export default function RequestsPage() {
   const openRequest = (row) => {
     setSelectedRequest(row)
     setActiveTab('communication')
-    setProposalForm({ description: row.proposal?.description || '', quotationAmount: row.proposal?.quotationAmount || '' })
+    setProposalForm({ description: row.proposal?.description || '', quotationAmount: row.proposal?.quotationAmount || '', currency: row.proposal?.currency || 'USD' })
     setCopiedLink(false)
   }
 
   const handleSaveProposal = () => {
     if (!proposalForm.description || !selectedRequest) return
-    const proposal = { description: proposalForm.description, quotationAmount: parseFloat(proposalForm.quotationAmount) || 0 }
+    const proposal = { description: proposalForm.description, quotationAmount: parseFloat(proposalForm.quotationAmount) || 0, currency: proposalForm.currency }
     saveProposal(selectedRequest.id, proposal)
     setSelectedRequest((prev) => prev ? { ...prev, proposal: { ...proposal, createdAt: new Date().toISOString() } } : null)
   }
@@ -315,7 +315,7 @@ export default function RequestsPage() {
                     <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gold-deep mb-2">Saved Proposal</p>
                     <p className="font-equip text-sm text-gdd-black mb-1">{liveRequest.proposal.description}</p>
                     <p className="font-equip text-xs text-gdd-black/50">
-                      Quotation: <strong>${liveRequest.proposal.quotationAmount.toLocaleString()}</strong>
+                      Quotation: <strong>{liveRequest.proposal.currency || 'USD'} {liveRequest.proposal.quotationAmount.toLocaleString()}</strong>
                     </p>
                     <p className="font-equip text-[10px] text-gdd-black/30 mt-1">
                       Saved {new Date(liveRequest.proposal.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -338,15 +338,26 @@ export default function RequestsPage() {
                   </div>
                   <div>
                     <label className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40 block mb-1.5">
-                      Quotation Amount ($)
+                      Quotation Amount
                     </label>
-                    <input
-                      type="number"
-                      value={proposalForm.quotationAmount}
-                      onChange={(e) => setProposalForm((p) => ({ ...p, quotationAmount: e.target.value }))}
-                      placeholder="0"
-                      className="w-full px-4 py-2 bg-white border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold"
-                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={proposalForm.currency}
+                        onChange={(e) => setProposalForm((p) => ({ ...p, currency: e.target.value }))}
+                        className="px-3 py-2 bg-white border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold"
+                      >
+                        {['USD', 'EUR', 'GBP', 'EGP', 'AED', 'SAR', 'KWD', 'QAR'].map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        value={proposalForm.quotationAmount}
+                        onChange={(e) => setProposalForm((p) => ({ ...p, quotationAmount: e.target.value }))}
+                        placeholder="0"
+                        className="flex-1 px-4 py-2 bg-white border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold"
+                      />
+                    </div>
                   </div>
                   <button
                     onClick={handleSaveProposal}
@@ -376,7 +387,7 @@ export default function RequestsPage() {
                   <div className="space-y-3">
                     <div className="p-4 bg-gold/5 border border-gold/20 rounded-sm">
                       <p className="font-equip text-xs text-gdd-black/60">Proposal amount</p>
-                      <p className="font-equip font-medium text-2xl text-gdd-black">${liveRequest.proposal.quotationAmount.toLocaleString()}</p>
+                      <p className="font-equip font-medium text-2xl text-gdd-black">{liveRequest.proposal.currency || 'USD'} {liveRequest.proposal.quotationAmount.toLocaleString()}</p>
                     </div>
                     <button
                       onClick={handleGenerateLink}

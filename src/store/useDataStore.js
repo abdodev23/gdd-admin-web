@@ -3,7 +3,7 @@ import { mockBookings } from '@/data/mockBookings'
 import { tickets } from '@/data/tickets'
 import { hotels } from '@/data/hotels'
 import { activities } from '@/data/activities'
-import { transfers } from '@/data/transfers'
+import { transferRoutes } from '@/data/transfers'
 import { sightseeing } from '@/data/sightseeing'
 import { experiences, bespokePackage } from '@/data/experiences'
 import { mockEvents } from '@/data/mockEvents'
@@ -19,7 +19,7 @@ const useDataStore = create((set, get) => ({
   tickets: [...tickets],
   hotels: [...hotels],
   activities: [...activities],
-  transfers: [...transfers],
+  transferRoutes: transferRoutes.map((r) => ({ ...r, cars: [...r.cars] })),
   sightseeing: [...sightseeing],
   experiences: [...experiences],
   bespokePackage,
@@ -29,6 +29,30 @@ const useDataStore = create((set, get) => ({
   requests: [...mockRequests],
   users: [...mockUsers],
   paymentLinks: [],
+
+  // Transfer car CRUD (per route)
+  updateCar: (routeId, carId, updates) =>
+    set((state) => ({
+      transferRoutes: state.transferRoutes.map((r) =>
+        r.id === routeId
+          ? { ...r, cars: r.cars.map((c) => (c.carId === carId ? { ...c, ...updates } : c)) }
+          : r
+      ),
+    })),
+
+  addCar: (routeId, car) =>
+    set((state) => ({
+      transferRoutes: state.transferRoutes.map((r) =>
+        r.id === routeId ? { ...r, cars: [...r.cars, car] } : r
+      ),
+    })),
+
+  deleteCar: (routeId, carId) =>
+    set((state) => ({
+      transferRoutes: state.transferRoutes.map((r) =>
+        r.id === routeId ? { ...r, cars: r.cars.filter((c) => c.carId !== carId) } : r
+      ),
+    })),
 
   generatePaymentLink: (requestId, amount) => {
     const url = `https://pay.galadedanza.com/link/${requestId}`
