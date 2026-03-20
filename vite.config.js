@@ -9,4 +9,7 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  preview: {
+    allowedHosts: ['admin.cairo.galadedanza.com'],
+  },
 })
