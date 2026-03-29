@@ -12,6 +12,7 @@ import { mockEmails } from '@/data/mockEmails'
 import { mockVipAllocations } from '@/data/mockVipAllocations'
 import { mockRequests } from '@/data/mockRequests'
 import { mockUsers } from '@/data/mockUsers'
+import { itineraries, itineraryHotels, childrenPolicy } from '@/data/mockItineraries'
 
 const useDataStore = create((set, get) => ({
   bookings: [...mockBookings],
@@ -28,6 +29,9 @@ const useDataStore = create((set, get) => ({
   vipAllocations: [...mockVipAllocations],
   requests: [...mockRequests],
   users: [...mockUsers],
+  itineraries: [...itineraries],
+  itineraryHotels: [...itineraryHotels],
+  childrenPolicy,
   paymentLinks: [],
 
   // Transfer car CRUD (per route)
