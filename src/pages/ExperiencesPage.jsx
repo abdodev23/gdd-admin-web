@@ -135,7 +135,7 @@ function SglBreakdown({ sglSupplement }) {
 }
 
 // ─── Itinerary Card ───
-function ItineraryCard({ itinerary, itineraryHotels, childrenPolicy, index, onEdit }) {
+function ItineraryCard({ itinerary, itineraryHotels, childrenPolicy, index, onEdit, onDelete }) {
   const [expanded, setExpanded] = useState(false)
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0)
   const selectedVariant = itinerary.hotelVariants[selectedVariantIdx]
@@ -157,6 +157,12 @@ function ItineraryCard({ itinerary, itineraryHotels, childrenPolicy, index, onEd
           </div>
           <div className="flex items-center gap-2">
             <StatusBadge status={itinerary.status === 'active' ? 'confirmed' : 'pending'} />
+            <button
+              onClick={() => onDelete(itinerary)}
+              className="px-3 py-1.5 border border-red-200 font-equip text-[10px] uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
+            >
+              Delete
+            </button>
             <button
               onClick={() => onEdit(itinerary)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-gdd-black text-white font-equip text-[10px] uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors"
@@ -392,11 +398,12 @@ function ItineraryCard({ itinerary, itineraryHotels, childrenPolicy, index, onEd
 
 // ─── Main Page ───
 export default function ExperiencesPage() {
-  const { bespokePackage, itineraries, itineraryHotels, childrenPolicy, updateItem } = useDataStore()
+  const { bespokePackage, itineraries, itineraryHotels, childrenPolicy, updateItem, deleteItem } = useDataStore()
   const [editOpen, setEditOpen] = useState(false)
   const [form, setForm] = useState({ ...bespokePackage })
   const [editingItinerary, setEditingItinerary] = useState(null)
   const [itinForm, setItinForm] = useState(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [activeCategory, setActiveCategory] = useState('all')
 
   // Bespoke package handlers
@@ -613,6 +620,7 @@ export default function ExperiencesPage() {
               childrenPolicy={childrenPolicy}
               index={idx}
               onEdit={handleItinEdit}
+              onDelete={setDeleteConfirm}
             />
           ))}
         </div>
@@ -801,6 +809,35 @@ export default function ExperiencesPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="Delete Itinerary"
+        size="sm"
+      >
+        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+          Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setDeleteConfirm(null)}
+            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              deleteItem('itineraries', deleteConfirm.id)
+              setDeleteConfirm(null)
+            }}
+            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
       </Modal>
     </div>
   )

@@ -10,9 +10,11 @@ import { mockEvents } from '@/data/mockEvents'
 import { mockPromos } from '@/data/mockPromos'
 import { mockEmails } from '@/data/mockEmails'
 import { mockVipAllocations } from '@/data/mockVipAllocations'
+import { financialLog } from '@/data/mockFinancialLog'
 import { mockRequests } from '@/data/mockRequests'
 import { mockUsers } from '@/data/mockUsers'
 import { itineraries, itineraryHotels, childrenPolicy } from '@/data/mockItineraries'
+import { seatingData as initialSeatingData } from '@/data/seating'
 
 const useDataStore = create((set, get) => ({
   bookings: [...mockBookings],
@@ -27,12 +29,41 @@ const useDataStore = create((set, get) => ({
   promos: [...mockPromos],
   emails: [...mockEmails],
   vipAllocations: [...mockVipAllocations],
+  financialLog: [...financialLog],
   requests: [...mockRequests],
   users: [...mockUsers],
   itineraries: [...itineraries],
   itineraryHotels: [...itineraryHotels],
   childrenPolicy,
+  seatingData: JSON.parse(JSON.stringify(initialSeatingData)),
   paymentLinks: [],
+
+  // Seat reservation toggle
+  toggleSeatReservation: (seatId) =>
+    set((state) => {
+      const newData = { ...state.seatingData }
+      for (const sectionKey of Object.keys(newData)) {
+        const section = newData[sectionKey]
+        const seatIdx = section.seats.findIndex((s) => s.id === seatId)
+        if (seatIdx !== -1) {
+          const seat = section.seats[seatIdx]
+          if (seat.status === 'sold') return state
+          const newSeats = [...section.seats]
+          newSeats[seatIdx] = {
+            ...seat,
+            status: seat.status === 'reserved' ? 'available' : 'reserved',
+          }
+          newData[sectionKey] = {
+            ...section,
+            seats: newSeats,
+            availableCount: newSeats.filter((s) => s.status === 'available').length,
+            soldCount: newSeats.filter((s) => s.status === 'sold').length,
+          }
+          break
+        }
+      }
+      return { seatingData: newData }
+    }),
 
   // Transfer car CRUD (per route)
   updateCar: (routeId, carId, updates) =>
