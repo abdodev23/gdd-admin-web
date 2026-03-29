@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Crown, UserCheck, Clock, HelpCircle, Plus } from 'lucide-react'
+import { Crown, UserCheck, Clock, HelpCircle, Plus, Copy, Check, Link } from 'lucide-react'
 import useDataStore from '@/store/useDataStore'
 import PageHeader from '@/components/ui/PageHeader'
 import DataTable from '@/components/ui/DataTable'
@@ -29,6 +29,7 @@ const statusOptions = [
 const columns = [
   { key: 'guestName', label: 'Guest Name', cellClassName: 'font-medium text-gdd-black' },
   { key: 'email', label: 'Email', render: (val) => val || <span className="text-gdd-black/25 italic">--</span> },
+  { key: 'phone', label: 'Phone', render: (val) => val || <span className="text-gdd-black/25 italic">--</span> },
   { key: 'ticketId', label: 'Ticket ID', render: (val) => (
     <span className="font-equip text-xs font-medium tracking-widest-plus uppercase">{val}</span>
   )},
@@ -37,15 +38,18 @@ const columns = [
   )},
   { key: 'assignedBy', label: 'Assigned By' },
   { key: 'status', label: 'Status', render: (val) => <StatusBadge status={val} /> },
+  { key: 'lastContact', label: 'Last Contact', render: (val) => val ? new Date(val).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : <span className="text-gdd-black/25 italic">--</span> },
   { key: 'assignedAt', label: 'Date', render: (val) => new Date(val).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) },
 ]
 
 export default function VipPage() {
-  const { vipAllocations, addItem } = useDataStore()
+  const { vipAllocations, addItem, updateItem } = useDataStore()
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState({ guestName: '', email: '', seatId: '' })
+  const [form, setForm] = useState({ guestName: '', email: '', seatId: '', phone: '', lastContact: '' })
+  const [selectedAllocation, setSelectedAllocation] = useState(null)
+  const [copied, setCopied] = useState(false)
 
   const counts = useMemo(() => {
     const confirmed = vipAllocations.filter((v) => v.status === 'confirmed').length
@@ -77,14 +81,29 @@ export default function VipPage() {
     addItem('vipAllocations', {
       guestName: form.guestName,
       email: form.email,
+      phone: form.phone,
+      lastContact: form.lastContact ? new Date(form.lastContact).toISOString() : null,
+      inviteLink: null,
       ticketId: `VIP-${String(nextNum).padStart(3, '0')}`,
       seatId: form.seatId || `vvip-TBD-${nextNum}`,
       assignedBy: 'Admin',
       status: 'allocated',
       assignedAt: new Date().toISOString(),
     })
-    setForm({ guestName: '', email: '', seatId: '' })
+    setForm({ guestName: '', email: '', seatId: '', phone: '', lastContact: '' })
     setModalOpen(false)
+  }
+
+  const handleGenerateInviteLink = (allocation) => {
+    const link = `https://galadedanza.com/vip/invite/${allocation.ticketId}`
+    updateItem('vipAllocations', allocation.id, { inviteLink: link })
+    setSelectedAllocation({ ...allocation, inviteLink: link })
+  }
+
+  const handleCopyInviteLink = async (link) => {
+    await navigator.clipboard.writeText(link)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   const statCards = [
@@ -163,7 +182,7 @@ export default function VipPage() {
           <SearchInput value={search} onChange={setSearch} placeholder="Search guests..." className="w-full sm:w-64" />
           <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions.slice(1)} placeholder="All Statuses" className="w-full sm:w-48" />
         </div>
-        <DataTable columns={columns} data={filtered} emptyMessage="No VIP allocations found" />
+        <DataTable columns={columns} data={filtered} onRowClick={(row) => setSelectedAllocation(row)} emptyMessage="No VIP allocations found" />
       </motion.div>
 
       {/* Add Allocation Modal */}
@@ -186,6 +205,25 @@ export default function VipPage() {
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="guest@example.com"
+              className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black placeholder:text-gdd-black/25 focus:outline-none focus:ring-1 focus:ring-gold"
+            />
+          </div>
+          <div>
+            <label className="block font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">Phone</label>
+            <input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="+1-555-0142"
+              className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black placeholder:text-gdd-black/25 focus:outline-none focus:ring-1 focus:ring-gold"
+            />
+          </div>
+          <div>
+            <label className="block font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">Last Contact</label>
+            <input
+              type="datetime-local"
+              value={form.lastContact}
+              onChange={(e) => setForm({ ...form, lastContact: e.target.value })}
               className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black placeholder:text-gdd-black/25 focus:outline-none focus:ring-1 focus:ring-gold"
             />
           </div>
@@ -214,6 +252,86 @@ export default function VipPage() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* Detail Modal */}
+      <Modal isOpen={!!selectedAllocation} onClose={() => { setSelectedAllocation(null); setCopied(false) }} title={`VIP Allocation — ${selectedAllocation?.ticketId}`} size="lg">
+        {selectedAllocation && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Guest Information</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Guest Name</p>
+                  <div className="font-equip text-sm text-gdd-black mt-0.5">{selectedAllocation.guestName}</div>
+                </div>
+                <div>
+                  <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Email</p>
+                  <div className="font-equip text-sm text-gdd-black mt-0.5">{selectedAllocation.email || '—'}</div>
+                </div>
+                <div>
+                  <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Phone</p>
+                  <div className="font-equip text-sm text-gdd-black mt-0.5">{selectedAllocation.phone || '—'}</div>
+                </div>
+                <div>
+                  <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Last Contact</p>
+                  <div className="font-equip text-sm text-gdd-black mt-0.5">
+                    {selectedAllocation.lastContact
+                      ? new Date(selectedAllocation.lastContact).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : '—'}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Allocation Details</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Ticket ID</p>
+                  <div className="font-equip text-sm text-gdd-black mt-0.5">{selectedAllocation.ticketId}</div>
+                </div>
+                <div>
+                  <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Seat ID</p>
+                  <div className="font-equip text-sm text-gdd-black mt-0.5">{selectedAllocation.seatId}</div>
+                </div>
+                <div>
+                  <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Assigned By</p>
+                  <div className="font-equip text-sm text-gdd-black mt-0.5">{selectedAllocation.assignedBy}</div>
+                </div>
+                <div>
+                  <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Status</p>
+                  <div className="mt-0.5"><StatusBadge status={selectedAllocation.status} /></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Invite Link Section */}
+            <div>
+              <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Invite Link</h3>
+              {selectedAllocation.inviteLink ? (
+                <div className="flex items-center gap-3 bg-sand-light/30 p-4 rounded-sm">
+                  <Link className="w-4 h-4 text-gold flex-shrink-0" />
+                  <span className="font-equip text-sm text-gdd-black truncate flex-1">{selectedAllocation.inviteLink}</span>
+                  <button
+                    onClick={() => handleCopyInviteLink(selectedAllocation.inviteLink)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gdd-black text-white font-equip text-xs rounded-sm hover:bg-gdd-black/90 transition-colors flex-shrink-0"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleGenerateInviteLink(selectedAllocation)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors"
+                >
+                  <Link className="w-4 h-4" />
+                  Generate Invite Link
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   )

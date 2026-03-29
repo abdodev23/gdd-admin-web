@@ -39,7 +39,7 @@ const emptyActivity = {
   durationHours: '',
   durationLabel: '',
   description: '',
-  image: '/images/dance/MEL_4520.jpg',
+  images: ['/images/dance/MEL_4520.jpg'],
   highlights: [],
   availableDates: [],
   timeSlots: [],
@@ -48,12 +48,13 @@ const emptyActivity = {
 }
 
 export default function ActivitiesPage() {
-  const { activities, addItem, updateItem } = useDataStore()
+  const { activities, addItem, updateItem, deleteItem } = useDataStore()
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [selectedActivity, setSelectedActivity] = useState(null)
   const [isAdding, setIsAdding] = useState(false)
   const [form, setForm] = useState({ ...emptyActivity })
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   const filtered = useMemo(() => {
     return activities.filter((a) => {
@@ -149,7 +150,7 @@ export default function ActivitiesPage() {
               {/* Image */}
               <div className="relative h-40 overflow-hidden">
                 <img
-                  src={activity.image}
+                  src={activity.images?.[0] || activity.image}
                   alt={activity.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -290,8 +291,9 @@ export default function ActivitiesPage() {
               />
             </div>
             <ImageUpload
-              value={form.image}
-              onChange={(url) => setForm({ ...form, image: url })}
+              value={form.images}
+              onChange={(urls) => setForm({ ...form, images: urls })}
+              multiple={true}
             />
           </div>
 
@@ -319,20 +321,62 @@ export default function ActivitiesPage() {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={closeModal}
-              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors"
-            >
-              {isAdding ? 'Add Activity' : 'Save Changes'}
-            </button>
+          <div className="flex justify-between pt-2">
+            {selectedActivity && !isAdding ? (
+              <button
+                onClick={() => {
+                  setDeleteConfirm(selectedActivity)
+                  setSelectedActivity(null)
+                }}
+                className="px-3 py-1.5 border border-red-200 font-equip text-[10px] uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
+              >
+                Delete
+              </button>
+            ) : <div />}
+            <div className="flex gap-3">
+              <button
+                onClick={closeModal}
+                className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors"
+              >
+                {isAdding ? 'Add Activity' : 'Save Changes'}
+              </button>
+            </div>
           </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="Delete Activity"
+        size="sm"
+      >
+        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+          Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setDeleteConfirm(null)}
+            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              deleteItem('activities', deleteConfirm.id)
+              setDeleteConfirm(null)
+            }}
+            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
         </div>
       </Modal>
     </div>

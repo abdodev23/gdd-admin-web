@@ -99,12 +99,13 @@ const columns = [
 ]
 
 export default function UsersPage() {
-  const { users, addItem, updateItem } = useDataStore()
+  const { users, addItem, updateItem, deleteItem } = useDataStore()
   const [search, setSearch] = useState('')
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [editUser, setEditUser] = useState(null)
   const [addForm, setAddForm] = useState({ name: '', email: '', role: 'viewer' })
   const [editForm, setEditForm] = useState({ name: '', email: '', role: '', status: '' })
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   const filtered = useMemo(() => {
     if (!search) return users
@@ -264,10 +265,50 @@ export default function UsersPage() {
             <label className="block font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">Status</label>
             <Select value={editForm.status} onChange={(val) => setEditForm({ ...editForm, status: val })} options={statusOptions} placeholder="" />
           </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button onClick={() => setEditUser(null)} className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors">Cancel</button>
-            <button onClick={handleUpdateUser} className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors">Save Changes</button>
+          <div className="flex justify-between pt-2">
+            <button
+              onClick={() => {
+                setDeleteConfirm(editUser)
+                setEditUser(null)
+              }}
+              className="px-3 py-1.5 border border-red-200 font-equip text-[10px] uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
+            >
+              Delete
+            </button>
+            <div className="flex gap-3">
+              <button onClick={() => setEditUser(null)} className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors">Cancel</button>
+              <button onClick={handleUpdateUser} className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors">Save Changes</button>
+            </div>
           </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="Delete User"
+        size="sm"
+      >
+        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+          Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setDeleteConfirm(null)}
+            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              deleteItem('users', deleteConfirm.id)
+              setDeleteConfirm(null)
+            }}
+            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
         </div>
       </Modal>
     </div>

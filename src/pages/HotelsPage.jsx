@@ -40,14 +40,15 @@ const emptyForm = {
   cancellationPolicy: '',
   amenities: '',
   description: '',
-  image: '/images/dance/MEL_4520.jpg',
+  images: ['/images/dance/MEL_4520.jpg'],
 }
 
 export default function HotelsPage() {
-  const { hotels, updateItem, addItem } = useDataStore()
+  const { hotels, updateItem, addItem, deleteItem } = useDataStore()
   const [selectedHotel, setSelectedHotel] = useState(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [form, setForm] = useState({ ...emptyForm })
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   const openEdit = (hotel) => {
     setSelectedHotel(hotel)
@@ -62,7 +63,7 @@ export default function HotelsPage() {
       cancellationPolicy: hotel.cancellationPolicy,
       amenities: hotel.amenities.join(', '),
       description: hotel.description,
-      image: hotel.image,
+      images: hotel.images || [hotel.image],
     })
   }
 
@@ -82,7 +83,7 @@ export default function HotelsPage() {
       cancellationPolicy: form.cancellationPolicy,
       amenities: form.amenities.split(',').map((s) => s.trim()).filter(Boolean),
       description: form.description,
-      image: form.image,
+      images: form.images,
     }
 
     if (selectedHotel) {
@@ -138,7 +139,7 @@ export default function HotelsPage() {
               {/* Image */}
               <div className="relative h-40 overflow-hidden">
                 <img
-                  src={hotel.image}
+                  src={hotel.images?.[0] || hotel.image}
                   alt={hotel.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -341,26 +342,69 @@ export default function HotelsPage() {
             />
           </FormField>
           <ImageUpload
-            value={form.image}
-            onChange={(url) => setForm({ ...form, image: url })}
+            value={form.images}
+            onChange={(urls) => setForm({ ...form, images: urls })}
+            multiple={true}
           />
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={() => {
-                setSelectedHotel(null)
-                setShowAddModal(false)
-              }}
-              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors"
-            >
-              {selectedHotel ? 'Save Changes' : 'Add Hotel'}
-            </button>
+          <div className="flex justify-between pt-2">
+            {selectedHotel ? (
+              <button
+                onClick={() => {
+                  setDeleteConfirm(selectedHotel)
+                  setSelectedHotel(null)
+                }}
+                className="px-3 py-1.5 border border-red-200 font-equip text-[10px] uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
+              >
+                Delete
+              </button>
+            ) : <div />}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setSelectedHotel(null)
+                  setShowAddModal(false)
+                }}
+                className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-6 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors"
+              >
+                {selectedHotel ? 'Save Changes' : 'Add Hotel'}
+              </button>
+            </div>
           </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="Delete Hotel"
+        size="sm"
+      >
+        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+          Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setDeleteConfirm(null)}
+            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              deleteItem('hotels', deleteConfirm.id)
+              setDeleteConfirm(null)
+            }}
+            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
         </div>
       </Modal>
     </div>

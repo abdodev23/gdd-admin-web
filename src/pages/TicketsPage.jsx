@@ -30,9 +30,10 @@ const tierBgColors = {
 }
 
 export default function TicketsPage() {
-  const { tickets, updateItem } = useDataStore()
+  const { tickets, updateItem, deleteItem } = useDataStore()
   const [editingTicket, setEditingTicket] = useState(null)
   const [form, setForm] = useState({})
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   const totalTickets = tickets.reduce((sum, t) => sum + t.totalSeats, 0)
   const totalSold = tickets.reduce((sum, t) => sum + t.sold, 0)
@@ -103,13 +104,21 @@ export default function TicketsPage() {
                       ${ticket.price}
                     </p>
                   </div>
-                  <button
-                    onClick={() => openEdit(ticket)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 font-equip text-xs font-medium uppercase tracking-widest-plus text-gold hover:text-gold-deep border border-gold/20 hover:border-gold/40 rounded-sm transition-colors"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                    Edit
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setDeleteConfirm(ticket)}
+                      className="px-3 py-1.5 border border-red-200 font-equip text-[10px] uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      onClick={() => openEdit(ticket)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 font-equip text-xs font-medium uppercase tracking-widest-plus text-gold hover:text-gold-deep border border-gold/20 hover:border-gold/40 rounded-sm transition-colors"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      Edit
+                    </button>
+                  </div>
                 </div>
 
                 {/* Stats */}
@@ -270,6 +279,35 @@ export default function TicketsPage() {
               Save Changes
             </button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="Delete Ticket Tier"
+        size="sm"
+      >
+        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+          Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setDeleteConfirm(null)}
+            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              deleteItem('tickets', deleteConfirm.id)
+              setDeleteConfirm(null)
+            }}
+            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
         </div>
       </Modal>
     </div>

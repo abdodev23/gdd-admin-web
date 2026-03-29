@@ -16,6 +16,7 @@ import RequestsPage from '@/pages/RequestsPage'
 import GuestReportPage from '@/pages/GuestReportPage'
 import RequestedTransfersPage from '@/pages/RequestedTransfersPage'
 import UsersPage from '@/pages/UsersPage'
+import FinancialCenterPage from '@/pages/FinancialCenterPage'
 import SettingsPage from '@/pages/SettingsPage'
 
 export const router = createBrowserRouter([
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       { path: 'requests', element: <RequestsPage /> },
       { path: 'hotels/guests', element: <GuestReportPage /> },
       { path: 'transfers/requests', element: <RequestedTransfersPage /> },
+      { path: 'financial', element: <FinancialCenterPage /> },
       { path: 'users', element: <UsersPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],

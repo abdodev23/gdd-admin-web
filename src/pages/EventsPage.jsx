@@ -35,9 +35,10 @@ function formatDay(dateStr) {
 }
 
 export default function EventsPage() {
-  const { events, updateItem } = useDataStore()
+  const { events, updateItem, deleteItem } = useDataStore()
   const [editingEvent, setEditingEvent] = useState(null)
   const [form, setForm] = useState({})
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   const openEdit = (event) => {
     setEditingEvent(event)
@@ -156,8 +157,14 @@ export default function EventsPage() {
                   </div>
                 </div>
 
-                {/* Edit button */}
-                <div className="mt-4 flex justify-end">
+                {/* Edit & Delete buttons */}
+                <div className="mt-4 flex justify-end gap-2">
+                  <button
+                    onClick={() => setDeleteConfirm(event)}
+                    className="px-3 py-1.5 border border-red-200 font-equip text-[10px] uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
+                  >
+                    Delete
+                  </button>
                   <button
                     onClick={() => openEdit(event)}
                     className="flex items-center gap-1.5 px-4 py-2 font-equip text-xs font-medium uppercase tracking-widest-plus text-gold hover:text-gold-deep border border-gold/20 hover:border-gold/40 rounded-sm transition-colors"
@@ -236,6 +243,35 @@ export default function EventsPage() {
               Save Changes
             </button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="Delete Event"
+        size="sm"
+      >
+        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+          Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setDeleteConfirm(null)}
+            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              deleteItem('events', deleteConfirm.id)
+              setDeleteConfirm(null)
+            }}
+            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
         </div>
       </Modal>
     </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Plus, Edit3, Tag } from 'lucide-react'
+import { Plus, Edit3, Trash2, Tag } from 'lucide-react'
 import useDataStore from '@/store/useDataStore'
 import PageHeader from '@/components/ui/PageHeader'
 import DataTable from '@/components/ui/DataTable'
@@ -28,10 +28,11 @@ const emptyPromo = {
 }
 
 export default function PromosPage() {
-  const { promos, addItem, updateItem } = useDataStore()
+  const { promos, addItem, updateItem, deleteItem } = useDataStore()
   const [editPromo, setEditPromo] = useState(null)
   const [isAdding, setIsAdding] = useState(false)
   const [form, setForm] = useState({ ...emptyPromo })
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
 
   const handleAdd = () => {
     setForm({ ...emptyPromo })
@@ -153,15 +154,26 @@ export default function PromosPage() {
       key: 'id',
       label: 'Actions',
       render: (val, row) => (
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            handleEdit(row)
-          }}
-          className="p-1.5 text-gdd-black/30 hover:text-gold transition-colors"
-        >
-          <Edit3 className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleEdit(row)
+            }}
+            className="p-1.5 text-gdd-black/30 hover:text-gold transition-colors"
+          >
+            <Edit3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setDeleteConfirm(row)
+            }}
+            className="p-1.5 text-gdd-black/30 hover:text-red-500 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       ),
     },
   ]
@@ -304,6 +316,35 @@ export default function PromosPage() {
               {isAdding ? 'Add Code' : 'Save Changes'}
             </button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="Delete Promo Code"
+        size="sm"
+      >
+        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+          Are you sure you want to delete <strong>{deleteConfirm?.code}</strong>? This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() => setDeleteConfirm(null)}
+            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              deleteItem('promos', deleteConfirm.id)
+              setDeleteConfirm(null)
+            }}
+            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors"
+          >
+            Delete
+          </button>
         </div>
       </Modal>
     </div>
