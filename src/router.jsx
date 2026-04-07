@@ -1,12 +1,15 @@
 import { createBrowserRouter } from 'react-router-dom'
 import AdminLayout from '@/components/layout/AdminLayout'
+import RoleGate from '@/components/auth/RoleGate'
+import LoginPage from '@/pages/LoginPage'
+import ForbiddenPage from '@/pages/ForbiddenPage'
 import DashboardPage from '@/pages/DashboardPage'
 import BookingsPage from '@/pages/BookingsPage'
 import EventsPage from '@/pages/EventsPage'
 import TicketsPage from '@/pages/TicketsPage'
 import SeatingPage from '@/pages/SeatingPage'
 import HotelsPage from '@/pages/HotelsPage'
-import ExperiencesPage from '@/pages/ExperiencesPage'
+import PackagesPage from '@/pages/PackagesPage'
 import ActivitiesPage from '@/pages/ActivitiesPage'
 import TransfersPage from '@/pages/TransfersPage'
 import PromosPage from '@/pages/PromosPage'
@@ -19,28 +22,42 @@ import UsersPage from '@/pages/UsersPage'
 import FinancialCenterPage from '@/pages/FinancialCenterPage'
 import SettingsPage from '@/pages/SettingsPage'
 
+// Per the role permission matrix in the implementation plan.
+// Default (no `roles` prop) allows all admin tiers.
+const adminOnly = ['super-admin', 'admin']
+const superAdminOnly = ['super-admin']
+const managerAndUp = ['super-admin', 'admin', 'manager']
+
 export const router = createBrowserRouter([
+  { path: '/login', element: <LoginPage /> },
+  { path: '/forbidden', element: <ForbiddenPage /> },
   {
-    element: <AdminLayout />,
+    element: (
+      <RoleGate>
+        <AdminLayout />
+      </RoleGate>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
-      { path: 'bookings', element: <BookingsPage /> },
+      { path: 'bookings', element: <RoleGate roles={managerAndUp}><BookingsPage /></RoleGate> },
       { path: 'events', element: <EventsPage /> },
       { path: 'tickets', element: <TicketsPage /> },
-      { path: 'seating', element: <SeatingPage /> },
+      { path: 'seating', element: <RoleGate roles={managerAndUp}><SeatingPage /></RoleGate> },
       { path: 'hotels', element: <HotelsPage /> },
-      { path: 'experiences', element: <ExperiencesPage /> },
+      { path: 'packages', element: <PackagesPage /> },
+      // Legacy alias — old `/experiences` route still resolves to PackagesPage
+      { path: 'experiences', element: <PackagesPage /> },
       { path: 'activities', element: <ActivitiesPage /> },
       { path: 'transfers', element: <TransfersPage /> },
       { path: 'promos', element: <PromosPage /> },
       { path: 'marketing', element: <MarketingPage /> },
       { path: 'vip', element: <VipPage /> },
-      { path: 'requests', element: <RequestsPage /> },
+      { path: 'requests', element: <RoleGate roles={managerAndUp}><RequestsPage /></RoleGate> },
       { path: 'hotels/guests', element: <GuestReportPage /> },
       { path: 'transfers/requests', element: <RequestedTransfersPage /> },
       { path: 'financial', element: <FinancialCenterPage /> },
-      { path: 'users', element: <UsersPage /> },
-      { path: 'settings', element: <SettingsPage /> },
+      { path: 'users', element: <RoleGate roles={adminOnly}><UsersPage /></RoleGate> },
+      { path: 'settings', element: <RoleGate roles={superAdminOnly}><SettingsPage /></RoleGate> },
     ],
   },
 ])

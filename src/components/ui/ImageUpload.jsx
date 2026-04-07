@@ -1,37 +1,81 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Upload, X, Plus } from 'lucide-react'
+import client from '@/api/client'
+import { toast } from '@/store/useToastStore'
+import { validateImage } from '@/data/imageProfiles'
 
 /**
- * ImageUpload — shows a preview of the current image and a click-to-upload button.
- * Calls onChange(dataUrl) with a base64 data URL when a file is selected.
+ * ImageUpload — uploads to Cloudinary via the backend's `POST /api/upload`
+ * endpoint, with client-side validation against an optional requirements
+ * profile (defined in `@/data/imageProfiles`).
  *
  * Props:
- *   value     — current image src (path string or data URL), or array of image URLs when multiple=true
- *   onChange  — called with new data URL after file is chosen, or array of URLs when multiple=true
- *   label     — field label (default: "Image")
- *   multiple  — allow multiple images (default: false)
+ *   value         — current image URL (string) or array of URLs (when multiple)
+ *   onChange      — called with the new URL or new URL array
+ *   label         — field label (omit to skip the label)
+ *   multiple      — allow multiple images
+ *   requirements  — optional image profile (e.g. IMAGE_PROFILES.HOTEL)
+ *
+ * Validation rejects the upload before any network call. The Cloudinary
+ * upload itself only happens after the file passes all checks.
  */
-export default function ImageUpload({ value, onChange, label = 'Image', multiple = false }) {
+export default function ImageUpload({
+  value,
+  onChange,
+  label = 'Image',
+  multiple = false,
+  requirements,
+}) {
   const inputRef = useRef(null)
+  const [uploading, setUploading] = useState(false)
 
-  // ── Single-image mode (original behavior) ──
+  // Validate + upload one file. Returns the Cloudinary URL or null on failure.
+  const validateAndUpload = async (file) => {
+    if (requirements) {
+      const error = await validateImage(file, requirements)
+      if (error) {
+        toast.error(`${file.name}: ${error}`, { duration: 7000 })
+        return null
+      }
+    }
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const { data } = await client.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      return data.url
+    } catch (err) {
+      toast.error(`Upload failed: ${err.response?.data?.error || err.message}`)
+      return null
+    }
+  }
+
+  // ── Single-image mode ──
   if (!multiple) {
-    const handleFile = (e) => {
+    const handleFile = async (e) => {
       const file = e.target.files[0]
-      if (!file) return
-      const reader = new FileReader()
-      reader.onload = (ev) => onChange(ev.target.result)
-      reader.readAsDataURL(file)
       e.target.value = ''
+      if (!file) return
+
+      setUploading(true)
+      const url = await validateAndUpload(file)
+      setUploading(false)
+      if (url) {
+        onChange(url)
+        toast.success('Image uploaded')
+      }
     }
 
     return (
       <div>
-        <label className="block font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">
-          {label}
-        </label>
+        {label && (
+          <label className="block font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">
+            {label}
+          </label>
+        )}
 
-        {/* Current image preview */}
         {value && (
           <div className="mb-2 h-32 bg-sand overflow-hidden rounded-sm">
             <img
@@ -43,22 +87,30 @@ export default function ImageUpload({ value, onChange, label = 'Image', multiple
           </div>
         )}
 
-        {/* Upload trigger */}
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gdd-black/10 hover:border-gold/40 hover:bg-gold/[0.02] transition-all rounded-sm"
+          disabled={uploading}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gdd-black/10 hover:border-gold/40 hover:bg-gold/[0.02] transition-all rounded-sm disabled:opacity-50"
         >
-          <Upload className="w-4 h-4 text-gdd-black/40" />
-          <span className="font-equip text-sm text-gdd-black/50">
-            {value ? 'Replace image' : 'Upload image'}
-          </span>
+          {uploading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+              <span className="font-equip text-sm text-gdd-black/50">Uploading…</span>
+            </>
+          ) : (
+            <>
+              <Upload className="w-4 h-4 text-gdd-black/40" />
+              <span className="font-equip text-sm text-gdd-black/50">
+                {value ? 'Replace image' : 'Upload image'}
+              </span>
+            </>
+          )}
         </button>
 
-        {/* Show path hint when value is a static path (not a data URL) */}
-        {value && !value.startsWith('data:') && (
-          <p className="font-equip text-[10px] text-gdd-black/30 mt-1 truncate" title={value}>
-            {value}
+        {requirements?.description && (
+          <p className="font-equip text-[10px] text-gdd-black/40 mt-1">
+            {requirements.description}
           </p>
         )}
 
@@ -76,26 +128,22 @@ export default function ImageUpload({ value, onChange, label = 'Image', multiple
   // ── Multiple-image mode ──
   const images = Array.isArray(value) ? value : value ? [value] : []
 
-  const handleFiles = (e) => {
+  const handleFiles = async (e) => {
     const files = Array.from(e.target.files)
+    e.target.value = ''
     if (!files.length) return
 
-    let processed = 0
-    const newUrls = []
-
-    files.forEach((file) => {
-      const reader = new FileReader()
-      reader.onload = (ev) => {
-        newUrls.push(ev.target.result)
-        processed++
-        if (processed === files.length) {
-          onChange([...images, ...newUrls])
-        }
-      }
-      reader.readAsDataURL(file)
-    })
-
-    e.target.value = ''
+    setUploading(true)
+    const uploaded = []
+    for (const file of files) {
+      const url = await validateAndUpload(file)
+      if (url) uploaded.push(url)
+    }
+    setUploading(false)
+    if (uploaded.length) {
+      onChange([...images, ...uploaded])
+      toast.success(`${uploaded.length} image${uploaded.length !== 1 ? 's' : ''} uploaded`)
+    }
   }
 
   const removeImage = (index) => {
@@ -105,11 +153,12 @@ export default function ImageUpload({ value, onChange, label = 'Image', multiple
 
   return (
     <div>
-      <label className="block font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">
-        {label}
-      </label>
+      {label && (
+        <label className="block font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">
+          {label}
+        </label>
+      )}
 
-      {/* Thumbnail grid */}
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-2 mb-2">
           {images.map((src, index) => (
@@ -130,26 +179,23 @@ export default function ImageUpload({ value, onChange, label = 'Image', multiple
               >
                 <X className="w-3 h-3" />
               </button>
-              {/* Path hint for static paths */}
-              {src && !src.startsWith('data:') && (
-                <div className="absolute bottom-0 left-0 right-0 bg-gdd-black/50 px-1 py-0.5">
-                  <p className="font-equip text-[8px] text-white truncate" title={src}>
-                    {src.split('/').pop()}
-                  </p>
-                </div>
-              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* Add more / Upload trigger */}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gdd-black/10 hover:border-gold/40 hover:bg-gold/[0.02] transition-all rounded-sm"
+        disabled={uploading}
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gdd-black/10 hover:border-gold/40 hover:bg-gold/[0.02] transition-all rounded-sm disabled:opacity-50"
       >
-        {images.length > 0 ? (
+        {uploading ? (
+          <>
+            <div className="w-4 h-4 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+            <span className="font-equip text-sm text-gdd-black/50">Uploading…</span>
+          </>
+        ) : images.length > 0 ? (
           <>
             <Plus className="w-4 h-4 text-gold" />
             <span className="font-equip text-sm text-gdd-black/50">Add more</span>
@@ -161,6 +207,12 @@ export default function ImageUpload({ value, onChange, label = 'Image', multiple
           </>
         )}
       </button>
+
+      {requirements?.description && (
+        <p className="font-equip text-[10px] text-gdd-black/40 mt-1">
+          {requirements.description}
+        </p>
+      )}
 
       <input
         ref={inputRef}

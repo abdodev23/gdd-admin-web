@@ -21,7 +21,7 @@ const navItems = [
   { group: 'Packages', items: [
     { to: '/hotels', icon: Building2, label: 'Hotels' },
     { to: '/hotels/guests', icon: BarChart2, label: 'Hotels Guests Report' },
-    { to: '/experiences', icon: Compass, label: 'Experiences' },
+    { to: '/packages', icon: Compass, label: 'Packages & Itineraries' },
     { to: '/activities', icon: MapPin, label: 'Activities' },
     { to: '/transfers', icon: Car, label: 'Transfers' },
     { to: '/transfers/requests', icon: ArrowLeftRight, label: 'Requested Transfers' },

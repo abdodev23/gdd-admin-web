@@ -2,10 +2,8 @@ import { motion } from 'framer-motion'
 import { DollarSign, Users, Ticket, BarChart3, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts'
-import useDataStore from '@/store/useDataStore'
 import StatsCard from '@/components/ui/StatsCard'
-import StatusBadge from '@/components/ui/StatusBadge'
-import DataTable from '@/components/ui/DataTable'
+import { useDashboardStats } from '@/api/hooks/useDashboard'
 import { formatCurrency } from '@/utils/formatCurrency'
 
 const fadeUp = {
@@ -16,36 +14,14 @@ const fadeUp = {
   }),
 }
 
-const revenueData = [
-  { month: 'Jan', revenue: 18500 },
-  { month: 'Feb', revenue: 32400 },
-  { month: 'Mar', revenue: 28900 },
+// Charts are still placeholder data — Phase 5 swaps these for real aggregations
+const placeholderRevenueData = [
+  { month: 'Jan', revenue: 0 },
+  { month: 'Feb', revenue: 0 },
+  { month: 'Mar', revenue: 0 },
   { month: 'Apr', revenue: 0 },
   { month: 'May', revenue: 0 },
   { month: 'Jun', revenue: 0 },
-]
-
-const bookingsByTier = [
-  { tier: 'General', count: 847, fill: '#C9A96E' },
-  { tier: 'Premium', count: 198, fill: '#B8860B' },
-  { tier: 'VIP', count: 72, fill: '#FFD700' },
-]
-
-const seatData = [
-  { name: 'General', value: 847, total: 1140, fill: '#C9A96E' },
-  { name: 'Premium', value: 198, total: 300, fill: '#B8860B' },
-  { name: 'VIP', value: 117, total: 150, fill: '#FFD700' },
-]
-
-const recentColumns = [
-  { key: 'id', label: 'ID', cellClassName: 'font-medium text-gdd-black' },
-  { key: 'customerName', label: 'Customer' },
-  { key: 'ticketTier', label: 'Tier', render: (val) => (
-    <span className="font-equip text-xs font-medium uppercase tracking-widest-plus">{val}</span>
-  )},
-  { key: 'total', label: 'Total', render: (val) => formatCurrency(val) },
-  { key: 'paymentStatus', label: 'Payment', render: (val) => <StatusBadge status={val} /> },
-  { key: 'status', label: 'Status', render: (val) => <StatusBadge status={val} /> },
 ]
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -60,27 +36,70 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function DashboardPage() {
   const navigate = useNavigate()
-  const { bookings, getStats } = useDataStore()
-  const stats = getStats()
-  const recentBookings = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8)
+  const { data: stats, isLoading } = useDashboardStats()
+
+  // Real seat occupancy from backend
+  const seatStats = stats?.seats || { available: 0, held: 0, sold: 0, reserved: 0 }
+  const totalSeats = seatStats.available + seatStats.held + seatStats.sold + seatStats.reserved
+  const occupancyPct = totalSeats > 0
+    ? Math.round(((seatStats.sold + seatStats.reserved) / totalSeats) * 100)
+    : 0
+
+  // Pie chart from real seat data, grouped by status
+  const seatChartData = [
+    { name: 'Sold',     value: seatStats.sold,     fill: '#D4985A' },
+    { name: 'Held',     value: seatStats.held,     fill: '#A25723' },
+    { name: 'Reserved', value: seatStats.reserved, fill: '#C5A44E' },
+    { name: 'Available', value: seatStats.available, fill: '#CCBEAA' },
+  ].filter((d) => d.value > 0)
+
+  // Bookings-by-status bar chart from real counts
+  const bookingsBars = stats ? [
+    { tier: 'Confirmed', count: stats.bookings.confirmed, fill: '#22c55e' },
+    { tier: 'Pending',   count: stats.bookings.pending,   fill: '#D4985A' },
+    { tier: 'Cancelled', count: stats.bookings.cancelled, fill: '#ef4444' },
+  ] : []
 
   return (
     <div>
-      {/* Stats Row */}
+      {/* Stats Row — real data from /api/analytics/dashboard */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-        <StatsCard icon={DollarSign} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} trend={12.5} index={0} />
-        <StatsCard icon={Users} label="Total Bookings" value={stats.totalBookings} trend={8.3} index={1} />
-        <StatsCard icon={Ticket} label="Tickets Sold" value={`${stats.ticketsSold} / ${stats.totalSeats}`} trend={6.1} index={2} />
-        <StatsCard icon={BarChart3} label="Seat Occupancy" value={`${stats.seatOccupancy}%`} trend={4.7} index={3} />
+        <StatsCard
+          icon={DollarSign}
+          label="Total Revenue"
+          value={isLoading ? '—' : formatCurrency(stats?.revenue?.total || 0)}
+          index={0}
+        />
+        <StatsCard
+          icon={Users}
+          label="Total Bookings"
+          value={isLoading ? '—' : (stats?.bookings?.total ?? 0)}
+          index={1}
+        />
+        <StatsCard
+          icon={Ticket}
+          label="Tickets Sold"
+          value={isLoading ? '—' : (stats?.ticketsSold ?? 0)}
+          index={2}
+        />
+        <StatsCard
+          icon={BarChart3}
+          label="Seat Occupancy"
+          value={isLoading ? '—' : `${occupancyPct}%`}
+          index={3}
+        />
       </div>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-        {/* Revenue Trend */}
+        {/* Revenue Trend (placeholder until Phase 5) */}
         <motion.div className="lg:col-span-2 bg-white p-6 rounded-sm shadow-sm" variants={fadeUp} initial="hidden" animate="visible" custom={4}>
-          <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-4">Revenue Trend</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40">Revenue Trend</h3>
+            <span className="font-equip text-[9px] tracking-widest-plus uppercase text-gdd-black/30">Coming in Phase 5</span>
+          </div>
           <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={revenueData}>
+            <AreaChart data={placeholderRevenueData}>
               <defs>
                 <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#D4985A" stopOpacity={0.2} />
@@ -96,11 +115,11 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Bookings by Tier */}
+        {/* Bookings by Status — real data */}
         <motion.div className="bg-white p-6 rounded-sm shadow-sm" variants={fadeUp} initial="hidden" animate="visible" custom={5}>
-          <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-4">Bookings by Tier</h3>
+          <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-4">Bookings by Status</h3>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={bookingsByTier} barSize={32}>
+            <BarChart data={bookingsBars} barSize={32}>
               <CartesianGrid strokeDasharray="3 3" stroke="#15151608" vertical={false} />
               <XAxis dataKey="tier" tickLine={false} axisLine={false} tick={{ fill: '#15151660', fontSize: 11, fontFamily: 'Equip' }} dy={8} />
               <YAxis tickLine={false} axisLine={false} tick={{ fill: '#15151660', fontSize: 11, fontFamily: 'Equip' }} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v} width={35} />
@@ -114,7 +133,7 @@ export default function DashboardPage() {
                 )
               }} />
               <Bar dataKey="count" radius={[2, 2, 0, 0]}>
-                {bookingsByTier.map((entry, i) => (
+                {bookingsBars.map((entry, i) => (
                   <Cell key={i} fill={entry.fill} />
                 ))}
               </Bar>
@@ -123,49 +142,53 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* Seat Occupancy + Quick Actions */}
+      {/* Seat status pie + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
         <motion.div className="bg-white p-6 rounded-sm shadow-sm" variants={fadeUp} initial="hidden" animate="visible" custom={6}>
-          <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-4">Seat Occupancy</h3>
-          <ResponsiveContainer width="100%" height={180}>
-            <PieChart>
-              <Pie data={seatData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={2}>
-                {seatData.map((entry, i) => (
-                  <Cell key={i} fill={entry.fill} />
-                ))}
-              </Pie>
-              <Tooltip content={({ active, payload }) => {
-                if (!active || !payload?.length) return null
-                const d = payload[0].payload
-                const pct = Math.round((d.value / d.total) * 100)
-                return (
-                  <div className="bg-gdd-black text-white px-3 py-2 rounded-sm shadow-lg">
-                    <p className="font-equip text-xs text-white/60">{d.name}</p>
-                    <p className="font-equip font-medium text-sm">{d.value.toLocaleString()} / {d.total.toLocaleString()}</p>
-                    <p className="font-equip text-xs text-white/40">{pct}% occupied</p>
+          <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-4">Seat Status</h3>
+          {seatChartData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={180}>
+                <PieChart>
+                  <Pie data={seatChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={2}>
+                    {seatChartData.map((entry, i) => (
+                      <Cell key={i} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null
+                    const d = payload[0].payload
+                    return (
+                      <div className="bg-gdd-black text-white px-3 py-2 rounded-sm shadow-lg">
+                        <p className="font-equip text-xs text-white/60">{d.name}</p>
+                        <p className="font-equip font-medium text-sm">{d.value.toLocaleString()}</p>
+                      </div>
+                    )
+                  }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex flex-wrap justify-center gap-3 mt-2">
+                {seatChartData.map((s) => (
+                  <div key={s.name} className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.fill }} />
+                    <span className="font-equip text-[10px] text-gdd-black/40">{s.name}</span>
                   </div>
-                )
-              }} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex justify-center gap-4 mt-2">
-            {seatData.map((s) => (
-              <div key={s.name} className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: s.fill }} />
-                <span className="font-equip text-[10px] text-gdd-black/40">{s.name}</span>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          ) : (
+            <p className="font-equip text-xs text-gdd-black/30 text-center py-12">No seat data yet</p>
+          )}
         </motion.div>
 
         <motion.div className="lg:col-span-2 bg-white p-6 rounded-sm shadow-sm" variants={fadeUp} initial="hidden" animate="visible" custom={7}>
           <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
-              { label: 'View All Bookings', desc: `${stats.pendingBookings} pending`, path: '/bookings' },
-              { label: 'Manage Promo Codes', desc: '6 active codes', path: '/promos' },
-              { label: 'VIP Allocations', desc: `${stats.vipAllocated} / ${stats.vipTotal} allocated`, path: '/vip' },
-              { label: 'Special Requests', desc: '3 new requests', path: '/requests' },
+              { label: 'View Bookings',     desc: `${stats?.bookings?.pending || 0} pending`,           path: '/bookings' },
+              { label: 'Manage Promos',     desc: 'Active codes',                                       path: '/promos' },
+              { label: 'VIP Allocations',   desc: 'Manage VIP guests',                                  path: '/vip' },
+              { label: 'Special Requests',  desc: 'Customer requests',                                  path: '/requests' },
             ].map((action) => (
               <button
                 key={action.path}
@@ -183,15 +206,15 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* Recent Bookings */}
-      <motion.div className="bg-white rounded-sm shadow-sm" variants={fadeUp} initial="hidden" animate="visible" custom={8}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gdd-black/5">
+      {/* Recent Bookings — placeholder until Phase 3 */}
+      <motion.div className="bg-white rounded-sm shadow-sm p-6" variants={fadeUp} initial="hidden" animate="visible" custom={8}>
+        <div className="flex items-center justify-between mb-4">
           <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40">Recent Bookings</h3>
-          <button onClick={() => navigate('/bookings')} className="font-equip text-xs text-gold hover:text-gold-deep transition-colors">
-            View all
-          </button>
+          <span className="font-equip text-[9px] tracking-widest-plus uppercase text-gdd-black/30">Wired in Phase 3</span>
         </div>
-        <DataTable columns={recentColumns} data={recentBookings} onRowClick={(row) => navigate('/bookings')} />
+        <p className="font-equip text-xs text-gdd-black/30 text-center py-8">
+          The bookings table will appear here once Phase 3 wires the bookings API.
+        </p>
       </motion.div>
     </div>
   )
