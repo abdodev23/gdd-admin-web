@@ -123,7 +123,50 @@ export default function SpecialRequestModal({ requestId, onClose }) {
     : 'Special Request'
 
   return (
-    <Modal isOpen={!!requestId} onClose={onClose} title={title} size="xl">
+    <Modal
+      isOpen={!!requestId}
+      onClose={onClose}
+      title={title}
+      size="xl"
+      footer={req && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex gap-2">
+            {req.status === 'new' && (
+              <button
+                onClick={advanceToInReview}
+                disabled={update.isPending}
+                className="px-4 py-2 border border-gdd-black/20 font-equip text-xs uppercase tracking-widest-plus text-gdd-black rounded-sm hover:bg-sand-light/50 disabled:opacity-40 transition-colors"
+              >
+                Mark In Review
+              </button>
+            )}
+            {!isTerminal(req.status) && req.status !== 'new' && (
+              <button
+                onClick={handleFulfill}
+                disabled={fulfill.isPending}
+                className="px-4 py-2 bg-status-green text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-status-green/90 disabled:opacity-40 transition-colors"
+              >
+                {fulfill.isPending ? 'Saving…' : 'Mark Fulfilled'}
+              </button>
+            )}
+            {!isTerminal(req.status) && !showDecline && (
+              <button
+                onClick={() => setShowDecline(true)}
+                className="px-4 py-2 border border-red-200 font-equip text-xs uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
+              >
+                Decline
+              </button>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/50 hover:text-gdd-black transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      )}
+    >
       {isLoading && (
         <div className="py-12 text-center font-equip text-sm text-gdd-black/40">Loading…</div>
       )}
@@ -350,43 +393,6 @@ export default function SpecialRequestModal({ requestId, onClose }) {
             </div>
           )}
 
-          {/* Footer actions */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gdd-black/10">
-            <div className="flex gap-2">
-              {req.status === 'new' && (
-                <button
-                  onClick={advanceToInReview}
-                  disabled={update.isPending}
-                  className="px-4 py-2 border border-gdd-black/20 font-equip text-xs uppercase tracking-widest-plus text-gdd-black rounded-sm hover:bg-sand-light/50 disabled:opacity-40 transition-colors"
-                >
-                  Mark In Review
-                </button>
-              )}
-              {!isTerminal(req.status) && req.status !== 'new' && (
-                <button
-                  onClick={handleFulfill}
-                  disabled={fulfill.isPending}
-                  className="px-4 py-2 bg-status-green text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-status-green/90 disabled:opacity-40 transition-colors"
-                >
-                  {fulfill.isPending ? 'Saving…' : 'Mark Fulfilled'}
-                </button>
-              )}
-              {!isTerminal(req.status) && !showDecline && (
-                <button
-                  onClick={() => setShowDecline(true)}
-                  className="px-4 py-2 border border-red-200 font-equip text-xs uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
-                >
-                  Decline
-                </button>
-              )}
-            </div>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/50 hover:text-gdd-black transition-colors"
-            >
-              Close
-            </button>
-          </div>
         </div>
       )}
     </Modal>

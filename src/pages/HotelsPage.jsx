@@ -348,6 +348,23 @@ export default function HotelsPage() {
         onClose={closeModal}
         title={selectedHotel ? `Edit ${selectedHotel.name}` : 'Add Hotel'}
         size="xl"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={closeModal}
+              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={createHotel.isPending || updateHotel.isPending}
+              className="px-6 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-50"
+            >
+              {createHotel.isPending || updateHotel.isPending ? 'Saving…' : (selectedHotel ? 'Save Changes' : 'Add Hotel')}
+            </button>
+          </div>
+        }
       >
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
@@ -663,21 +680,6 @@ export default function HotelsPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={closeModal}
-              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={createHotel.isPending || updateHotel.isPending}
-              className="px-6 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-50"
-            >
-              {createHotel.isPending || updateHotel.isPending ? 'Saving…' : (selectedHotel ? 'Save Changes' : 'Add Hotel')}
-            </button>
-          </div>
         </div>
       </Modal>
 
@@ -687,30 +689,32 @@ export default function HotelsPage() {
         onClose={() => setDeleteConfirm(null)}
         title="Delete Hotel"
         size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                deleteHotel.mutate(deleteConfirm._id, { onSuccess: () => setDeleteConfirm(null) })
+              }}
+              disabled={deleteHotel.isPending}
+              className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {deleteHotel.isPending ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        }
       >
         <p className="font-equip text-sm text-gdd-black/70 mb-2">
           Permanently delete <strong>{deleteConfirm?.name}</strong>?
         </p>
-        <p className="font-equip text-xs text-gdd-black/40 mb-6">
+        <p className="font-equip text-xs text-gdd-black/40">
           The hotel will be hidden from BOTH the customer site and the admin panel. Use Deactivate instead if you might want it back.
         </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setDeleteConfirm(null)}
-            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              deleteHotel.mutate(deleteConfirm._id, { onSuccess: () => setDeleteConfirm(null) })
-            }}
-            disabled={deleteHotel.isPending}
-            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
-          >
-            {deleteHotel.isPending ? 'Deleting…' : 'Delete'}
-          </button>
-        </div>
       </Modal>
     </div>
   )

@@ -275,6 +275,23 @@ export default function PromosPage() {
         onClose={closeModal}
         title={isAdding ? 'Add Promo Code' : 'Edit Promo Code'}
         size="md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={closeModal}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={createPromo.isPending || updatePromo.isPending}
+              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-50"
+            >
+              {createPromo.isPending || updatePromo.isPending ? 'Saving…' : (isAdding ? 'Add Code' : 'Save Changes')}
+            </button>
+          </div>
+        }
       >
         <div className="space-y-5">
           <div>
@@ -363,21 +380,6 @@ export default function PromosPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={closeModal}
-              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={createPromo.isPending || updatePromo.isPending}
-              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-50"
-            >
-              {createPromo.isPending || updatePromo.isPending ? 'Saving…' : (isAdding ? 'Add Code' : 'Save Changes')}
-            </button>
-          </div>
         </div>
       </Modal>
 
@@ -387,30 +389,32 @@ export default function PromosPage() {
         onClose={() => setDeleteConfirm(null)}
         title="Delete Promo Code"
         size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                deletePromo.mutate(deleteConfirm._id, { onSuccess: () => setDeleteConfirm(null) })
+              }}
+              disabled={deletePromo.isPending}
+              className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {deletePromo.isPending ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        }
       >
         <p className="font-equip text-sm text-gdd-black/70 mb-2">
           Permanently delete <strong>{deleteConfirm?.code}</strong>?
         </p>
-        <p className="font-equip text-xs text-gdd-black/40 mb-6">
+        <p className="font-equip text-xs text-gdd-black/40">
           The code will be hidden from BOTH the customer site and admin views. The record stays in the database but won't appear anywhere. Use Deactivate instead if you might want it back later.
         </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setDeleteConfirm(null)}
-            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              deletePromo.mutate(deleteConfirm._id, { onSuccess: () => setDeleteConfirm(null) })
-            }}
-            disabled={deletePromo.isPending}
-            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
-          >
-            {deletePromo.isPending ? 'Deleting…' : 'Delete'}
-          </button>
-        </div>
       </Modal>
     </div>
   )

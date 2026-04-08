@@ -378,6 +378,23 @@ export default function ActivitiesPage() {
         onClose={closeModal}
         title={isAdding ? 'Add Activity' : 'Edit Activity'}
         size="lg"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={closeModal}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={createActivity.isPending || updateActivity.isPending}
+              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-50"
+            >
+              {createActivity.isPending || updateActivity.isPending ? 'Saving…' : (isAdding ? 'Add Activity' : 'Save Changes')}
+            </button>
+          </div>
+        }
       >
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4">
@@ -567,21 +584,6 @@ export default function ActivitiesPage() {
             />
           </Field>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={closeModal}
-              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={createActivity.isPending || updateActivity.isPending}
-              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-50"
-            >
-              {createActivity.isPending || updateActivity.isPending ? 'Saving…' : (isAdding ? 'Add Activity' : 'Save Changes')}
-            </button>
-          </div>
         </div>
       </Modal>
 
@@ -591,30 +593,32 @@ export default function ActivitiesPage() {
         onClose={() => setDeleteConfirm(null)}
         title="Delete Activity"
         size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                deleteActivity.mutate(deleteConfirm._id, { onSuccess: () => setDeleteConfirm(null) })
+              }}
+              disabled={deleteActivity.isPending}
+              className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {deleteActivity.isPending ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        }
       >
         <p className="font-equip text-sm text-gdd-black/70 mb-2">
           Permanently delete <strong>{deleteConfirm?.name}</strong>?
         </p>
-        <p className="font-equip text-xs text-gdd-black/40 mb-6">
+        <p className="font-equip text-xs text-gdd-black/40">
           Hidden from BOTH the customer site and the admin panel. Use Deactivate instead if you might want it back.
         </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setDeleteConfirm(null)}
-            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              deleteActivity.mutate(deleteConfirm._id, { onSuccess: () => setDeleteConfirm(null) })
-            }}
-            disabled={deleteActivity.isPending}
-            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
-          >
-            {deleteActivity.isPending ? 'Deleting…' : 'Delete'}
-          </button>
-        </div>
       </Modal>
     </div>
   )

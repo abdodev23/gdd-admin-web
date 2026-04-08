@@ -186,7 +186,27 @@ export default function VipPage() {
       </motion.div>
 
       {/* Add Allocation Modal */}
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Add VIP Allocation">
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title="Add VIP Allocation"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setModalOpen(false)}
+              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAdd}
+              className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors"
+            >
+              Add Allocation
+            </button>
+          </div>
+        }
+      >
         <div className="space-y-4">
           <div>
             <label className="block font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">Guest Name</label>
@@ -236,20 +256,6 @@ export default function VipPage() {
               placeholder="e.g. vvip-A-15"
               className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black placeholder:text-gdd-black/25 focus:outline-none focus:ring-1 focus:ring-gold"
             />
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={() => setModalOpen(false)}
-              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAdd}
-              className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors"
-            >
-              Add Allocation
-            </button>
           </div>
         </div>
       </Modal>

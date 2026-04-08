@@ -350,7 +350,28 @@ export default function SeatingPage() {
       )}
 
       {/* Override Modal */}
-      <Modal isOpen={!!overrideSeat} onClose={() => setOverrideSeat(null)} title="Seat Override">
+      <Modal
+        isOpen={!!overrideSeat}
+        onClose={() => setOverrideSeat(null)}
+        title="Seat Override"
+        footer={overrideSeat && (
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setOverrideSeat(null)}
+              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleOverrideSave}
+              disabled={updateSeat.isPending}
+              className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 disabled:opacity-40 transition-colors"
+            >
+              {updateSeat.isPending ? 'Saving…' : 'Save Override'}
+            </button>
+          </div>
+        )}
+      >
         {overrideSeat && (
           <div className="space-y-4">
             <div className="bg-sand-light/40 px-4 py-3 rounded-sm">
@@ -381,21 +402,6 @@ export default function SeatingPage() {
                   This seat is currently held by a guest. Setting to "Available" will release the hold.
                 </p>
               )}
-            </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => setOverrideSeat(null)}
-                className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleOverrideSave}
-                disabled={updateSeat.isPending}
-                className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 disabled:opacity-40 transition-colors"
-              >
-                {updateSeat.isPending ? 'Saving…' : 'Save Override'}
-              </button>
             </div>
           </div>
         )}

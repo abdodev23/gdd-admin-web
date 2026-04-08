@@ -367,6 +367,23 @@ export default function PackagesPage() {
         onClose={closeModal}
         title={isAdding ? 'Add Package' : `Edit ${selected?.name || 'Package'}`}
         size="xl"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={closeModal}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={createPackage.isPending || updatePackage.isPending}
+              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-50"
+            >
+              {createPackage.isPending || updatePackage.isPending ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        }
       >
         <div className="space-y-5">
           {/* Core package fields */}
@@ -746,21 +763,6 @@ export default function PackagesPage() {
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={closeModal}
-              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={createPackage.isPending || updatePackage.isPending}
-              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-50"
-            >
-              {createPackage.isPending || updatePackage.isPending ? 'Saving…' : 'Save'}
-            </button>
-          </div>
         </div>
       </Modal>
 
@@ -770,28 +772,30 @@ export default function PackagesPage() {
         onClose={() => setDeleteConfirm(null)}
         title="Delete Package"
         size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => deletePackage.mutate(deleteConfirm._id, { onSuccess: () => setDeleteConfirm(null) })}
+              disabled={deletePackage.isPending}
+              className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {deletePackage.isPending ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        }
       >
         <p className="font-equip text-sm text-gdd-black/70 mb-2">
           Permanently delete <strong>{deleteConfirm?.name}</strong>?
         </p>
-        <p className="font-equip text-xs text-gdd-black/40 mb-6">
+        <p className="font-equip text-xs text-gdd-black/40">
           The package and its itinerary will be hidden from BOTH the customer site and the admin panel. Use Deactivate instead if you might want it back.
         </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setDeleteConfirm(null)}
-            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => deletePackage.mutate(deleteConfirm._id, { onSuccess: () => setDeleteConfirm(null) })}
-            disabled={deletePackage.isPending}
-            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
-          >
-            {deletePackage.isPending ? 'Deleting…' : 'Delete'}
-          </button>
-        </div>
       </Modal>
     </div>
   )

@@ -379,6 +379,23 @@ export default function TransfersPage() {
         onClose={() => setAddRouteOpen(false)}
         title="Add Transfer Route"
         size="md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setAddRouteOpen(false)}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCreateRoute}
+              disabled={createTransfer.isPending || !routeForm.routeId || !routeForm.label}
+              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-30"
+            >
+              {createTransfer.isPending ? 'Creating…' : 'Create Route'}
+            </button>
+          </div>
+        }
       >
         <div className="space-y-4">
           <Field label="Route ID (slug)">
@@ -399,21 +416,6 @@ export default function TransfersPage() {
               className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold"
             />
           </Field>
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={() => setAddRouteOpen(false)}
-              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCreateRoute}
-              disabled={createTransfer.isPending || !routeForm.routeId || !routeForm.label}
-              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-30"
-            >
-              {createTransfer.isPending ? 'Creating…' : 'Create Route'}
-            </button>
-          </div>
         </div>
       </Modal>
 
@@ -423,6 +425,23 @@ export default function TransfersPage() {
         onClose={() => { setEditCarTarget(null); setAddCarRouteId(null) }}
         title={editCarTarget ? 'Edit Vehicle' : 'Add Vehicle'}
         size="md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => { setEditCarTarget(null); setAddCarRouteId(null) }}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveCar}
+              disabled={updateTransfer.isPending || !carForm.carName}
+              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-30"
+            >
+              {updateTransfer.isPending ? 'Saving…' : (editCarTarget ? 'Save Changes' : 'Add Vehicle')}
+            </button>
+          </div>
+        }
       >
         <div className="space-y-4">
           <Field label="Vehicle Name *">
@@ -460,21 +479,6 @@ export default function TransfersPage() {
             onChange={(url) => setCarForm((f) => ({ ...f, image: url }))}
             requirements={IMAGE_PROFILES.TRANSFER_CAR}
           />
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={() => { setEditCarTarget(null); setAddCarRouteId(null) }}
-              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveCar}
-              disabled={updateTransfer.isPending || !carForm.carName}
-              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-30"
-            >
-              {updateTransfer.isPending ? 'Saving…' : (editCarTarget ? 'Save Changes' : 'Add Vehicle')}
-            </button>
-          </div>
         </div>
       </Modal>
 
@@ -484,25 +488,27 @@ export default function TransfersPage() {
         onClose={() => setDeleteCarTarget(null)}
         title="Remove Vehicle"
         size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteCarTarget(null)}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteCar}
+              disabled={updateTransfer.isPending}
+              className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {updateTransfer.isPending ? 'Removing…' : 'Remove'}
+            </button>
+          </div>
+        }
       >
-        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+        <p className="font-equip text-sm text-gdd-black/70">
           Remove <strong>{deleteCarTarget?.car?.carName}</strong> from <strong>{deleteCarTarget?.route?.label}</strong>?
         </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setDeleteCarTarget(null)}
-            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleDeleteCar}
-            disabled={updateTransfer.isPending}
-            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
-          >
-            {updateTransfer.isPending ? 'Removing…' : 'Remove'}
-          </button>
-        </div>
       </Modal>
 
       {/* Delete Route Confirm */}
@@ -511,28 +517,30 @@ export default function TransfersPage() {
         onClose={() => setDeleteRouteTarget(null)}
         title="Delete Route"
         size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteRouteTarget(null)}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteRoute}
+              disabled={deleteTransfer.isPending}
+              className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
+            >
+              {deleteTransfer.isPending ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        }
       >
         <p className="font-equip text-sm text-gdd-black/70 mb-2">
           Permanently delete the <strong>{deleteRouteTarget?.label}</strong> route?
         </p>
-        <p className="font-equip text-xs text-gdd-black/40 mb-6">
+        <p className="font-equip text-xs text-gdd-black/40">
           The route and all its vehicles will be hidden from BOTH the customer site and the admin panel. Use Deactivate instead if you might want it back.
         </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setDeleteRouteTarget(null)}
-            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleDeleteRoute}
-            disabled={deleteTransfer.isPending}
-            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors disabled:opacity-50"
-          >
-            {deleteTransfer.isPending ? 'Deleting…' : 'Delete'}
-          </button>
-        </div>
       </Modal>
     </div>
   )

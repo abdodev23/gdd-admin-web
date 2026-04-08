@@ -294,7 +294,28 @@ export default function UsersPage() {
       </motion.div>
 
       {/* Invite Modal — super-admin only */}
-      <Modal isOpen={inviteOpen} onClose={() => setInviteOpen(false)} title="Invite New Admin">
+      <Modal
+        isOpen={inviteOpen}
+        onClose={() => setInviteOpen(false)}
+        title="Invite New Admin"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setInviteOpen(false)}
+              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleInvite}
+              disabled={inviteUser.isPending}
+              className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 disabled:opacity-40 transition-colors"
+            >
+              {inviteUser.isPending ? 'Sending…' : 'Send Invitation'}
+            </button>
+          </div>
+        }
+      >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -339,26 +360,45 @@ export default function UsersPage() {
             An invitation email with a password reset link will be sent. The invitee
             must verify their email and set a password before signing in.
           </p>
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={() => setInviteOpen(false)}
-              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleInvite}
-              disabled={inviteUser.isPending}
-              className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 disabled:opacity-40 transition-colors"
-            >
-              {inviteUser.isPending ? 'Sending…' : 'Send Invitation'}
-            </button>
-          </div>
         </div>
       </Modal>
 
       {/* Edit Modal */}
-      <Modal isOpen={!!editUser} onClose={() => setEditUser(null)} title="Edit User">
+      <Modal
+        isOpen={!!editUser}
+        onClose={() => setEditUser(null)}
+        title="Edit User"
+        footer={editUser && (
+          <div className="flex justify-between">
+            {isSuperAdmin && editUser._id !== currentUserId ? (
+              <button
+                onClick={() => {
+                  setDeleteConfirm(editUser)
+                  setEditUser(null)
+                }}
+                className="px-3 py-1.5 border border-red-200 font-equip text-[10px] uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
+              >
+                Delete
+              </button>
+            ) : <span />}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEditUser(null)}
+                className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={updateUser.isPending}
+                className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 disabled:opacity-40 transition-colors"
+              >
+                {updateUser.isPending ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        )}
+      >
         {editUser && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 pb-3 border-b border-gdd-black/5">
@@ -421,34 +461,6 @@ export default function UsersPage() {
                 placeholder=""
               />
             </div>
-            <div className="flex justify-between pt-2">
-              {isSuperAdmin && editUser._id !== currentUserId && (
-                <button
-                  onClick={() => {
-                    setDeleteConfirm(editUser)
-                    setEditUser(null)
-                  }}
-                  className="px-3 py-1.5 border border-red-200 font-equip text-[10px] uppercase tracking-widest-plus text-red-500 rounded-sm hover:bg-red-50 transition-colors"
-                >
-                  Delete
-                </button>
-              )}
-              <div className="flex gap-3 ml-auto">
-                <button
-                  onClick={() => setEditUser(null)}
-                  className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  disabled={updateUser.isPending}
-                  className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 disabled:opacity-40 transition-colors"
-                >
-                  {updateUser.isPending ? 'Saving…' : 'Save Changes'}
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </Modal>
@@ -459,8 +471,25 @@ export default function UsersPage() {
         onClose={() => setDeleteConfirm(null)}
         title="Delete User"
         size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleteUser.isPending}
+              className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 disabled:opacity-40 transition-colors"
+            >
+              {deleteUser.isPending ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        }
       >
-        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+        <p className="font-equip text-sm text-gdd-black/70">
           Are you sure you want to delete{' '}
           <strong>
             {deleteConfirm
@@ -469,21 +498,6 @@ export default function UsersPage() {
           </strong>
           ? This will also delete their Firebase account. This cannot be undone.
         </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setDeleteConfirm(null)}
-            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleteUser.isPending}
-            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 disabled:opacity-40 transition-colors"
-          >
-            {deleteUser.isPending ? 'Deleting…' : 'Delete'}
-          </button>
-        </div>
       </Modal>
     </div>
   )

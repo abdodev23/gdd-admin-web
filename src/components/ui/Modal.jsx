@@ -9,7 +9,7 @@ const sizeMap = {
   xl: 'max-w-4xl',
 }
 
-export default function Modal({ isOpen, onClose, title, children, size = 'md' }) {
+export default function Modal({ isOpen, onClose, title, children, footer, size = 'md' }) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -40,6 +40,11 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' })
             <div className="px-6 py-5 max-h-[70vh] overflow-y-auto">
               {children}
             </div>
+            {footer && (
+              <div className="px-6 py-4 border-t border-gdd-black/5">
+                {footer}
+              </div>
+            )}
           </motion.div>
         </div>
       )}

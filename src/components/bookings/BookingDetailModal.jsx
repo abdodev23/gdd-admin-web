@@ -67,7 +67,29 @@ export default function BookingDetailModal({ bookingId, onClose }) {
   }
 
   return (
-    <Modal isOpen={!!bookingId} onClose={onClose} title={booking ? `Booking ${booking.ref}` : 'Booking'} size="xl">
+    <Modal
+      isOpen={!!bookingId}
+      onClose={onClose}
+      title={booking ? `Booking ${booking.ref}` : 'Booking'}
+      size="xl"
+      footer={booking && (
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+          >
+            Close
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={updateBooking.isPending || (status === booking.status && paymentStatus === booking.paymentStatus)}
+            className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {updateBooking.isPending ? 'Saving…' : 'Save Changes'}
+          </button>
+        </div>
+      )}
+    >
       {isLoading && (
         <div className="py-12 text-center font-equip text-sm text-gdd-black/40">Loading booking…</div>
       )}
@@ -289,21 +311,6 @@ export default function BookingDetailModal({ bookingId, onClose }) {
             </div>
           </Section>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-gdd-black/10">
-            <button
-              onClick={onClose}
-              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-            >
-              Close
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={updateBooking.isPending || (status === booking.status && paymentStatus === booking.paymentStatus)}
-              className="px-5 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              {updateBooking.isPending ? 'Saving…' : 'Save Changes'}
-            </button>
-          </div>
         </div>
       )}
     </Modal>

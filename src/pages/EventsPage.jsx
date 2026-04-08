@@ -185,6 +185,22 @@ export default function EventsPage() {
         onClose={() => setEditingEvent(null)}
         title={`Edit Event`}
         size="lg"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setEditingEvent(null)}
+              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-6 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors"
+            >
+              Save Changes
+            </button>
+          </div>
+        }
       >
         <div className="space-y-4">
           <FormField label="Event Name">
@@ -229,20 +245,6 @@ export default function EventsPage() {
               className="w-full px-4 py-2 bg-white border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold resize-none"
             />
           </FormField>
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={() => setEditingEvent(null)}
-              className="px-4 py-2 font-equip text-sm text-gdd-black/50 hover:text-gdd-black transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors"
-            >
-              Save Changes
-            </button>
-          </div>
         </div>
       </Modal>
 
@@ -252,27 +254,29 @@ export default function EventsPage() {
         onClose={() => setDeleteConfirm(null)}
         title="Delete Event"
         size="sm"
+        footer={
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteConfirm(null)}
+              className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                deleteItem('events', deleteConfirm.id)
+                setDeleteConfirm(null)
+              }}
+              className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        }
       >
-        <p className="font-equip text-sm text-gdd-black/70 mb-6">
+        <p className="font-equip text-sm text-gdd-black/70">
           Are you sure you want to delete <strong>{deleteConfirm?.name}</strong>? This cannot be undone.
         </p>
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={() => setDeleteConfirm(null)}
-            className="px-5 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              deleteItem('events', deleteConfirm.id)
-              setDeleteConfirm(null)
-            }}
-            className="px-5 py-2 bg-red-600 text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-red-700 transition-colors"
-          >
-            Delete
-          </button>
-        </div>
       </Modal>
     </div>
   )
