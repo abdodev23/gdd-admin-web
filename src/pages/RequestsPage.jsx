@@ -1,13 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Inbox, Loader, CheckCircle, Clock } from 'lucide-react'
-import useDataStore from '@/store/useDataStore'
 import PageHeader from '@/components/ui/PageHeader'
 import DataTable from '@/components/ui/DataTable'
 import StatusBadge from '@/components/ui/StatusBadge'
-import Modal from '@/components/ui/Modal'
 import SearchInput from '@/components/ui/SearchInput'
 import Select from '@/components/ui/Select'
+import SpecialRequestModal from '@/components/requests/SpecialRequestModal'
+import { useSpecialRequests } from '@/api/hooks/useSpecialRequests'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -17,436 +16,212 @@ const fadeUp = {
   }),
 }
 
-const statusOptions = [
-  { value: 'new', label: 'New' },
-  { value: 'in-progress', label: 'In Progress' },
-  { value: 'resolved', label: 'Resolved' },
+const TABS = [
+  { id: 'special', label: 'Special Requests' },
+  { id: 'modifications', label: 'Modifications' },
+  { id: 'cancellations', label: 'Cancellations' },
+  { id: 'contact', label: 'Contact' },
+  { id: 'waitlist', label: 'Waitlist' },
 ]
 
-const columns = [
-  { key: 'customerName', label: 'Customer', cellClassName: 'font-medium text-gdd-black' },
-  { key: 'originalLanguage', label: 'Language', render: (val, row) => (
-    <span className="font-equip text-sm">
-      {row.languageFlag} <span className="uppercase text-xs tracking-widest-plus text-gdd-black/40 ml-1">{val}</span>
-    </span>
-  )},
-  { key: 'categories', label: 'Categories', render: (val) => (
-    <span className="font-equip text-xs text-gdd-black/60">
-      {Array.isArray(val) && val.length > 0 ? val.join(', ') : '—'}
-    </span>
-  )},
-  { key: 'message', label: 'Message', render: (val) => (
-    <span className="text-gdd-black/60">{val.length > 60 ? `${val.slice(0, 60)}...` : val}</span>
-  )},
-  { key: 'bookingId', label: 'Booking ID', render: (val) => (
-    <span className="font-equip text-xs font-medium tracking-widest-plus uppercase">{val}</span>
-  )},
-  { key: 'status', label: 'Status', render: (val) => <StatusBadge status={val} /> },
-  { key: 'createdAt', label: 'Date', render: (val) => new Date(val).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) },
-]
-
-function TabButton({ active, onClick, children }) {
+function TabButton({ active, onClick, children, count }) {
   return (
     <button
       onClick={onClick}
-      className={`px-4 py-2 font-equip text-xs tracking-widest-plus uppercase transition-colors ${
+      className={`px-4 py-3 font-equip text-xs tracking-widest-plus uppercase transition-colors flex items-center gap-2 ${
         active
           ? 'border-b-2 border-gdd-black text-gdd-black'
-          : 'text-gdd-black/40 hover:text-gdd-black/70'
+          : 'border-b-2 border-transparent text-gdd-black/40 hover:text-gdd-black/70'
       }`}
     >
       {children}
+      {typeof count === 'number' && (
+        <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium ${
+          active ? 'bg-gdd-black text-white' : 'bg-gdd-black/5 text-gdd-black/40'
+        }`}>
+          {count}
+        </span>
+      )}
     </button>
   )
 }
 
 export default function RequestsPage() {
-  const { requests, updateItem, generatePaymentLink, markPaymentLinkPaid, saveProposal } = useDataStore()
-  const [statusFilter, setStatusFilter] = useState('')
-  const [search, setSearch] = useState('')
-  const [selectedRequest, setSelectedRequest] = useState(null)
-  const [activeTab, setActiveTab] = useState('communication')
-  const [proposalForm, setProposalForm] = useState({ description: '', quotationAmount: '', currency: 'USD' })
-  const [copiedLink, setCopiedLink] = useState(false)
-
-  const counts = useMemo(() => ({
-    new: requests.filter((r) => r.status === 'new').length,
-    'in-progress': requests.filter((r) => r.status === 'in-progress').length,
-    resolved: requests.filter((r) => r.status === 'resolved').length,
-    awaitingPayment: requests.filter((r) => r.paymentLink?.status === 'pending').length,
-  }), [requests])
-
-  const filtered = useMemo(() => {
-    let result = [...requests]
-    if (statusFilter) result = result.filter((r) => r.status === statusFilter)
-    if (search) {
-      const q = search.toLowerCase()
-      result = result.filter((r) =>
-        r.customerName.toLowerCase().includes(q) ||
-        r.message.toLowerCase().includes(q) ||
-        r.bookingId.toLowerCase().includes(q)
-      )
-    }
-    return result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  }, [requests, statusFilter, search])
-
-  const handleStatusChange = (id, newStatus) => {
-    updateItem('requests', id, { status: newStatus })
-    setSelectedRequest((prev) => prev ? { ...prev, status: newStatus } : null)
-  }
-
-  const openRequest = (row) => {
-    setSelectedRequest(row)
-    setActiveTab('communication')
-    setProposalForm({ description: row.proposal?.description || '', quotationAmount: row.proposal?.quotationAmount || '', currency: row.proposal?.currency || 'USD' })
-    setCopiedLink(false)
-  }
-
-  const handleSaveProposal = () => {
-    if (!proposalForm.description || !selectedRequest) return
-    const proposal = { description: proposalForm.description, quotationAmount: parseFloat(proposalForm.quotationAmount) || 0, currency: proposalForm.currency }
-    saveProposal(selectedRequest.id, proposal)
-    setSelectedRequest((prev) => prev ? { ...prev, proposal: { ...proposal, createdAt: new Date().toISOString() } } : null)
-  }
-
-  const handleGenerateLink = () => {
-    if (!selectedRequest?.proposal) return
-    const link = generatePaymentLink(selectedRequest.id, selectedRequest.proposal.quotationAmount)
-    setSelectedRequest((prev) => prev ? { ...prev, paymentLink: link } : null)
-  }
-
-  const handleMarkPaid = () => {
-    if (!selectedRequest) return
-    markPaymentLinkPaid(selectedRequest.id)
-    setSelectedRequest((prev) =>
-      prev ? { ...prev, paymentLink: { ...prev.paymentLink, status: 'paid' } } : null
-    )
-  }
-
-  const handleCopyLink = () => {
-    if (!selectedRequest?.paymentLink) return
-    navigator.clipboard.writeText(selectedRequest.paymentLink.url)
-    setCopiedLink(true)
-    setTimeout(() => setCopiedLink(false), 2000)
-  }
-
-  // Get live request data from store
-  const liveRequest = selectedRequest ? requests.find((r) => r.id === selectedRequest.id) || selectedRequest : null
-
-  const statCards = [
-    { label: 'New', count: counts.new, icon: Inbox, color: 'text-gdd-black/30' },
-    { label: 'In Progress', count: counts['in-progress'], icon: Loader, color: 'text-gold-deep' },
-    { label: 'Resolved', count: counts.resolved, icon: CheckCircle, color: 'text-status-green' },
-    { label: 'Awaiting Payment', count: counts.awaitingPayment, icon: Clock, color: 'text-status-blue' },
-  ]
-
-  const isDifferentLanguage = liveRequest && liveRequest.originalLanguage !== 'en'
+  const [activeTab, setActiveTab] = useState('special')
 
   return (
     <div>
-      <PageHeader
-        title="Special Requests"
-        subtitle={`${requests.length} total requests`}
-      />
+      <PageHeader title="Requests" subtitle="Customer requests, modifications, and inbound messages" />
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {statCards.map((card, i) => (
-          <motion.div
-            key={card.label}
-            className="bg-white p-5 rounded-sm shadow-sm"
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            custom={i}
+      {/* Tabs */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        animate="visible"
+        custom={0}
+        className="border-b border-gdd-black/10 mb-6 flex flex-wrap"
+      >
+        {TABS.map((tab) => (
+          <TabButton
+            key={tab.id}
+            active={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40">{card.label}</p>
-                <p className="font-equip font-medium text-2xl text-gdd-black mt-1">{card.count}</p>
-              </div>
-              <card.icon className={`w-8 h-8 ${card.color} opacity-30`} />
-            </div>
-          </motion.div>
+            {tab.label}
+          </TabButton>
         ))}
-      </div>
-
-      {/* Filters + Table */}
-      <motion.div className="bg-white rounded-sm shadow-sm" variants={fadeUp} initial="hidden" animate="visible" custom={4}>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-6 py-4 border-b border-gdd-black/5">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search requests..." className="w-full sm:w-64" />
-          <Select value={statusFilter} onChange={setStatusFilter} options={statusOptions} placeholder="All Statuses" className="w-full sm:w-48" />
-        </div>
-        <DataTable
-          columns={columns}
-          data={filtered}
-          onRowClick={openRequest}
-          emptyMessage="No requests found"
-        />
       </motion.div>
 
-      {/* Request Detail Modal */}
-      <Modal isOpen={!!liveRequest} onClose={() => setSelectedRequest(null)} title="Request Details" size="lg">
-        {liveRequest && (
-          <div className="space-y-5">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-equip text-sm font-medium text-gdd-black">{liveRequest.customerName}</p>
-                <p className="font-equip text-xs text-gdd-black/40 mt-0.5">
-                  {new Date(liveRequest.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                {liveRequest.categories?.length > 0 && (
-                  <div className="flex gap-1.5">
-                    {liveRequest.categories.map((cat) => (
-                      <span key={cat} className="px-2 py-0.5 bg-gold/10 text-gold-deep font-equip text-[10px] tracking-widest-plus uppercase rounded-sm">
-                        {cat}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <StatusBadge status={liveRequest.status} />
-              </div>
-            </div>
+      {/* Tab content */}
+      {activeTab === 'special' && <SpecialRequestsTab />}
+      {activeTab === 'modifications' && <PlaceholderTab title="Booking Modifications" message="Coming in Phase 4 Slice E." />}
+      {activeTab === 'cancellations' && <PlaceholderTab title="Cancellations" message="Coming in Phase 4 Slice B." />}
+      {activeTab === 'contact' && <PlaceholderTab title="Contact" message="Coming in Phase 4 Slice C." />}
+      {activeTab === 'waitlist' && <PlaceholderTab title="Waitlist" message="Coming in Phase 4 Slice C." />}
+    </div>
+  )
+}
 
-            {/* Workflow Tabs */}
-            <div className="border-b border-gdd-black/5">
-              <div className="flex gap-1">
-                <TabButton active={activeTab === 'communication'} onClick={() => setActiveTab('communication')}>
-                  Communication
-                </TabButton>
-                <TabButton active={activeTab === 'proposal'} onClick={() => setActiveTab('proposal')}>
-                  Proposal
-                </TabButton>
-                <TabButton active={activeTab === 'payment'} onClick={() => setActiveTab('payment')}>
-                  Payment Link
-                  {liveRequest.paymentLink?.status === 'pending' && (
-                    <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-gold-deep" />
-                  )}
-                </TabButton>
-              </div>
-            </div>
+// ---------------------------------------------------------------------------
+// Special Requests tab
+// ---------------------------------------------------------------------------
 
-            {/* Tab: Communication */}
-            {activeTab === 'communication' && (
-              <div className="space-y-4">
-                {/* SGI Email badge */}
-                {liveRequest.emailSentToSGI && (
-                  <div className="flex items-center gap-2 px-4 py-3 bg-status-green/10 rounded-sm">
-                    <CheckCircle className="w-4 h-4 text-status-green shrink-0" />
-                    <div>
-                      <p className="font-equip text-xs font-medium text-status-green">Email sent to SGI</p>
-                      {liveRequest.emailSentAt && (
-                        <p className="font-equip text-[10px] text-gdd-black/40 mt-0.5">
-                          {new Date(liveRequest.emailSentAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
+const statusOptions = [
+  { value: '', label: 'All Statuses' },
+  { value: 'new', label: 'New' },
+  { value: 'in-review', label: 'In Review' },
+  { value: 'awaiting-payment', label: 'Awaiting Payment' },
+  { value: 'paid', label: 'Paid' },
+  { value: 'fulfilled', label: 'Fulfilled' },
+  { value: 'declined', label: 'Declined' },
+]
 
-                {/* Original message */}
-                <div>
-                  <p className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-2">
-                    Original Message {liveRequest.languageFlag}
-                  </p>
-                  <div className="p-4 bg-sand-light/50 rounded-sm">
-                    <p className="font-equip text-sm text-gdd-black leading-relaxed">{liveRequest.message}</p>
-                  </div>
-                </div>
+const columns = [
+  { key: 'bookingRef', label: 'Booking', cellClassName: 'font-medium text-gdd-black' },
+  { key: 'guestName', label: 'Guest' },
+  {
+    key: 'guestEmail',
+    label: 'Email',
+    render: (val) => (
+      <span className="max-w-[180px] truncate block" title={val}>{val || '—'}</span>
+    ),
+  },
+  {
+    key: 'originalLanguage',
+    label: 'Lang',
+    render: (val, row) => (
+      <span className="font-equip text-xs">
+        {row.languageFlag} <span className="uppercase tracking-widest-plus text-gdd-black/40">{val}</span>
+      </span>
+    ),
+  },
+  {
+    key: 'originalMessage',
+    label: 'Message',
+    render: (val) => (
+      <span className="text-gdd-black/60 line-clamp-1 max-w-[280px] block" title={val}>
+        {val?.length > 80 ? `${val.slice(0, 80)}…` : val}
+      </span>
+    ),
+  },
+  { key: 'status', label: 'Status', render: (val) => <StatusBadge status={val} /> },
+  {
+    key: 'createdAt',
+    label: 'Date',
+    render: (val) => new Date(val).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+  },
+]
 
-                {isDifferentLanguage && (
-                  <div>
-                    <p className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-2">
-                      Translated Message (English)
-                    </p>
-                    <div className="p-4 bg-gold/5 rounded-sm border border-gold/10">
-                      <p className="font-equip text-sm text-gdd-black leading-relaxed">{liveRequest.translatedMessage}</p>
-                    </div>
-                  </div>
-                )}
+function SpecialRequestsTab() {
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const [selectedId, setSelectedId] = useState(null)
 
-                {/* Booking reference */}
-                <div>
-                  <p className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-1">
-                    Booking Reference
-                  </p>
-                  <span className="inline-block px-3 py-1 bg-gdd-black/5 rounded-sm font-equip text-xs font-medium tracking-widest-plus uppercase text-gdd-black">
-                    {liveRequest.bookingId}
-                  </span>
-                </div>
+  const params = {
+    page,
+    limit: 25,
+    ...(search && { search }),
+    ...(status && { status }),
+  }
 
-                {/* Status actions */}
-                <div className="flex items-center gap-3 pt-2 border-t border-gdd-black/5">
-                  {liveRequest.status === 'new' && (
-                    <button
-                      onClick={() => handleStatusChange(liveRequest.id, 'in-progress')}
-                      className="px-5 py-2 bg-gold text-white font-equip text-sm rounded-sm hover:bg-gold-deep transition-colors"
-                    >
-                      Mark In Progress
-                    </button>
-                  )}
-                  {liveRequest.status === 'in-progress' && (
-                    <button
-                      onClick={() => handleStatusChange(liveRequest.id, 'resolved')}
-                      className="px-5 py-2 bg-status-green text-white font-equip text-sm rounded-sm hover:bg-status-green/90 transition-colors"
-                    >
-                      Mark Resolved
-                    </button>
-                  )}
-                  {liveRequest.status === 'resolved' && (
-                    <span className="font-equip text-xs text-gdd-black/30">This request has been resolved.</span>
-                  )}
-                </div>
-              </div>
-            )}
+  const { data, isLoading, isError, refetch } = useSpecialRequests(params)
+  const rows = data?.data || []
+  const total = data?.total || 0
 
-            {/* Tab: Proposal */}
-            {activeTab === 'proposal' && (
-              <div className="space-y-4">
-                <p className="font-equip text-xs text-gdd-black/50 leading-relaxed">
-                  After communicating with the client off-platform, log the agreed proposal and quotation here.
-                </p>
+  const clearFilters = () => {
+    setSearch('')
+    setStatus('')
+    setPage(1)
+  }
+  const hasFilters = search || status
 
-                {liveRequest.proposal && (
-                  <div className="p-4 bg-gold/5 border border-gold/20 rounded-sm">
-                    <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gold-deep mb-2">Saved Proposal</p>
-                    <p className="font-equip text-sm text-gdd-black mb-1">{liveRequest.proposal.description}</p>
-                    <p className="font-equip text-xs text-gdd-black/50">
-                      Quotation: <strong>{liveRequest.proposal.currency || 'USD'} {liveRequest.proposal.quotationAmount.toLocaleString()}</strong>
-                    </p>
-                    <p className="font-equip text-[10px] text-gdd-black/30 mt-1">
-                      Saved {new Date(liveRequest.proposal.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </p>
-                  </div>
-                )}
-
-                <div className="space-y-3">
-                  <div>
-                    <label className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40 block mb-1.5">
-                      Proposal Description
-                    </label>
-                    <textarea
-                      value={proposalForm.description}
-                      onChange={(e) => setProposalForm((p) => ({ ...p, description: e.target.value }))}
-                      rows={3}
-                      placeholder="Describe the agreed solution..."
-                      className="w-full px-4 py-2 bg-white border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold resize-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40 block mb-1.5">
-                      Quotation Amount
-                    </label>
-                    <div className="flex gap-2">
-                      <select
-                        value={proposalForm.currency}
-                        onChange={(e) => setProposalForm((p) => ({ ...p, currency: e.target.value }))}
-                        className="px-3 py-2 bg-white border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold"
-                      >
-                        {['USD', 'EUR', 'GBP', 'EGP', 'AED', 'SAR', 'KWD', 'QAR'].map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        value={proposalForm.quotationAmount}
-                        onChange={(e) => setProposalForm((p) => ({ ...p, quotationAmount: e.target.value }))}
-                        placeholder="0"
-                        className="flex-1 px-4 py-2 bg-white border border-gdd-black/10 rounded-sm font-equip text-sm text-gdd-black focus:outline-none focus:ring-1 focus:ring-gold"
-                      />
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleSaveProposal}
-                    disabled={!proposalForm.description}
-                    className="px-5 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-30"
-                  >
-                    Save Proposal
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Tab: Payment Link */}
-            {activeTab === 'payment' && (
-              <div className="space-y-4">
-                {!liveRequest.proposal ? (
-                  <div className="p-4 bg-sand-light/50 rounded-sm text-center">
-                    <p className="font-equip text-sm text-gdd-black/50">Save a proposal first before generating a payment link.</p>
-                    <button
-                      onClick={() => setActiveTab('proposal')}
-                      className="font-equip text-xs text-gold mt-2 underline underline-offset-2 hover:text-gold-deep"
-                    >
-                      Go to Proposal tab →
-                    </button>
-                  </div>
-                ) : !liveRequest.paymentLink ? (
-                  <div className="space-y-3">
-                    <div className="p-4 bg-gold/5 border border-gold/20 rounded-sm">
-                      <p className="font-equip text-xs text-gdd-black/60">Proposal amount</p>
-                      <p className="font-equip font-medium text-2xl text-gdd-black">{liveRequest.proposal.currency || 'USD'} {liveRequest.proposal.quotationAmount.toLocaleString()}</p>
-                    </div>
-                    <button
-                      onClick={handleGenerateLink}
-                      className="w-full px-5 py-2.5 bg-gold text-white font-equip text-sm rounded-sm hover:bg-gold-deep transition-colors"
-                    >
-                      Generate Payment Link
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <div className={`p-4 rounded-sm border ${liveRequest.paymentLink.status === 'paid' ? 'bg-status-green/5 border-status-green/20' : 'bg-gold/5 border-gold/20'}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40">Payment Status</p>
-                        <span className={`font-equip text-xs font-medium px-2 py-0.5 rounded-full ${liveRequest.paymentLink.status === 'paid' ? 'bg-status-green/10 text-status-green' : 'bg-gold/10 text-gold-deep'}`}>
-                          {liveRequest.paymentLink.status === 'paid' ? 'Paid' : 'Pending'}
-                        </span>
-                      </div>
-                      <p className="font-equip font-medium text-xl text-gdd-black">${liveRequest.paymentLink.amount.toLocaleString()}</p>
-                    </div>
-
-                    <div>
-                      <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40 mb-1.5">Payment Link</p>
-                      <div className="flex gap-2">
-                        <input
-                          readOnly
-                          value={liveRequest.paymentLink.url}
-                          className="flex-1 px-3 py-2 border border-gdd-black/10 bg-gdd-black/2 font-equip text-xs text-gdd-black/60 rounded-sm"
-                        />
-                        <button
-                          onClick={handleCopyLink}
-                          className="px-4 py-2 border border-gdd-black/20 font-equip text-xs text-gdd-black hover:bg-gdd-black/5 transition-colors rounded-sm shrink-0"
-                        >
-                          {copiedLink ? 'Copied!' : 'Copy'}
-                        </button>
-                      </div>
-                    </div>
-
-                    {liveRequest.paymentLink.status === 'pending' && (
-                      <button
-                        onClick={handleMarkPaid}
-                        className="w-full px-5 py-2.5 bg-status-green text-white font-equip text-sm rounded-sm hover:bg-status-green/90 transition-colors"
-                      >
-                        Mark as Paid
-                      </button>
-                    )}
-
-                    {liveRequest.paymentLink.status === 'paid' && (
-                      <div className="flex items-center gap-2 text-status-green">
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="font-equip text-sm">Payment received</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <SearchInput
+          value={search}
+          onChange={(v) => { setSearch(v); setPage(1) }}
+          placeholder="Search ref, guest, message…"
+          className="w-full sm:w-80"
+        />
+        <Select
+          value={status}
+          onChange={(v) => { setStatus(v); setPage(1) }}
+          options={statusOptions}
+          placeholder=""
+          className="w-full sm:w-52"
+        />
+        {hasFilters && (
+          <button
+            onClick={clearFilters}
+            className="px-4 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors"
+          >
+            Clear
+          </button>
         )}
-      </Modal>
+      </div>
+
+      <div className="bg-white rounded-sm shadow-sm">
+        {isError ? (
+          <div className="py-16 text-center">
+            <p className="font-equip text-sm text-red-500 mb-3">Failed to load special requests.</p>
+            <button
+              onClick={() => refetch()}
+              className="px-4 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={rows}
+            loading={isLoading}
+            onRowClick={(row) => setSelectedId(row._id)}
+            emptyMessage="No special requests yet"
+            page={page}
+            limit={25}
+            total={total}
+            onPageChange={setPage}
+          />
+        )}
+      </div>
+
+      <SpecialRequestModal requestId={selectedId} onClose={() => setSelectedId(null)} />
+    </>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Placeholder for other tabs (filled in by later slices)
+// ---------------------------------------------------------------------------
+
+function PlaceholderTab({ title, message }) {
+  return (
+    <div className="bg-white rounded-sm shadow-sm py-20 text-center">
+      <p className="font-medino text-2xl text-gdd-black/40 mb-2">{title}</p>
+      <p className="font-equip text-sm text-gdd-black/30">{message}</p>
     </div>
   )
 }
