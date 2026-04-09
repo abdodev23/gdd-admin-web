@@ -48,6 +48,7 @@ const emptyTicket = {
   description: '',
   includes: [],
   color: '',
+  soldOut: false,
 }
 
 export default function TicketsPage() {
@@ -93,6 +94,7 @@ export default function TicketsPage() {
       description: ticket.description || '',
       includes:    ticket.includes || [],
       color:       ticket.color || '',
+      soldOut:     !!ticket.soldOut,
     })
   }
 
@@ -112,6 +114,7 @@ export default function TicketsPage() {
       description: form.description,
       includes:    form.includes,
       color:       form.color,
+      soldOut:     !!form.soldOut,
     }
     if (isAdding) {
       createTicket.mutate(payload, { onSuccess: closeModal })
@@ -380,6 +383,16 @@ export default function TicketsPage() {
               emptyMessage="No inclusions yet."
             />
           </FormField>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.soldOut}
+              onChange={(e) => setForm({ ...form, soldOut: e.target.checked })}
+              className="w-4 h-4"
+            />
+            <span className="font-equip text-sm text-gdd-black/70">Sold Out</span>
+          </label>
 
         </div>
       </Modal>

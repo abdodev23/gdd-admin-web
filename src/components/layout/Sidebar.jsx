@@ -35,7 +35,7 @@ const navItems = [
     { to: '/financial', icon: Wallet, label: 'Financial Center' },
   ]},
   { group: 'Support', items: [
-    { to: '/requests', icon: MessageSquare, label: 'Special Requests' },
+    { to: '/requests', icon: MessageSquare, label: 'Requests' },
     { to: '/users', icon: Users, label: 'Users & Roles' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ]},

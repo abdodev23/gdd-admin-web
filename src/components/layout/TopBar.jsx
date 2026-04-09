@@ -18,7 +18,7 @@ const pageNames = {
   '/promos': 'Promo Codes',
   '/marketing': 'Marketing',
   '/vip': 'VIP Management',
-  '/requests': 'Special Requests',
+  '/requests': 'Requests',
   '/users': 'Users & Roles',
   '/settings': 'Settings',
 }
