@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, BookOpen, Calendar, Ticket, Grid3X3,
-  Building2, Compass, MapPin, Car, Tag, Mail, Crown,
+  Building2, Compass, MapPin, Car, Tag,
   MessageSquare, Users, Settings, X, BarChart2, ArrowLeftRight, Wallet,
 } from 'lucide-react'
 import useAdminStore from '@/store/useAdminStore'
@@ -28,8 +28,8 @@ const navItems = [
   ]},
   { group: 'Marketing', items: [
     { to: '/promos', icon: Tag, label: 'Promo Codes' },
-    { to: '/marketing', icon: Mail, label: 'Marketing' },
-    { to: '/vip', icon: Crown, label: 'VIP Management' },
+    // { to: '/marketing', icon: Mail, label: 'Marketing' }, // disabled — not needed now
+    // { to: '/vip', icon: Crown, label: 'VIP Management' }, // disabled — not needed now
   ]},
   { group: 'Finance', items: [
     { to: '/financial', icon: Wallet, label: 'Financial Center' },

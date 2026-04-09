@@ -13,14 +13,15 @@ import PackagesPage from '@/pages/PackagesPage'
 import ActivitiesPage from '@/pages/ActivitiesPage'
 import TransfersPage from '@/pages/TransfersPage'
 import PromosPage from '@/pages/PromosPage'
-import MarketingPage from '@/pages/MarketingPage'
-import VipPage from '@/pages/VipPage'
+// import MarketingPage from '@/pages/MarketingPage' // disabled — not needed now
+// import VipPage from '@/pages/VipPage' // disabled — not needed now
 import RequestsPage from '@/pages/RequestsPage'
 import GuestReportPage from '@/pages/GuestReportPage'
 import RequestedTransfersPage from '@/pages/RequestedTransfersPage'
 import UsersPage from '@/pages/UsersPage'
 import FinancialCenterPage from '@/pages/FinancialCenterPage'
 import SettingsPage from '@/pages/SettingsPage'
+import NotFoundPage from '@/pages/NotFoundPage'
 
 // Per the role permission matrix in the implementation plan.
 // Default (no `roles` prop) allows all admin tiers.
@@ -50,14 +51,16 @@ export const router = createBrowserRouter([
       { path: 'activities', element: <ActivitiesPage /> },
       { path: 'transfers', element: <TransfersPage /> },
       { path: 'promos', element: <PromosPage /> },
-      { path: 'marketing', element: <MarketingPage /> },
-      { path: 'vip', element: <VipPage /> },
+      // { path: 'marketing', element: <MarketingPage /> }, // disabled — not needed now
+      // { path: 'vip', element: <VipPage /> }, // disabled — not needed now
       { path: 'requests', element: <RoleGate roles={managerAndUp}><RequestsPage /></RoleGate> },
       { path: 'hotels/guests', element: <GuestReportPage /> },
       { path: 'transfers/requests', element: <RequestedTransfersPage /> },
       { path: 'financial', element: <FinancialCenterPage /> },
       { path: 'users', element: <RoleGate roles={adminOnly}><UsersPage /></RoleGate> },
       { path: 'settings', element: <RoleGate roles={superAdminOnly}><SettingsPage /></RoleGate> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
+  { path: '*', element: <NotFoundPage /> },
 ])

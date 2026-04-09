@@ -193,7 +193,7 @@ export default function DashboardPage() {
             {[
               { label: 'View Bookings',     desc: `${stats?.bookings?.pending || 0} pending`,           path: '/bookings' },
               { label: 'Manage Promos',     desc: 'Active codes',                                       path: '/promos' },
-              { label: 'VIP Allocations',   desc: 'Manage VIP guests',                                  path: '/vip' },
+              // { label: 'VIP Allocations',   desc: 'Manage VIP guests',                                  path: '/vip' }, // disabled — not needed now
               { label: 'Requests',          desc: 'Customer requests',                                  path: '/requests' },
             ].map((action) => (
               <button
