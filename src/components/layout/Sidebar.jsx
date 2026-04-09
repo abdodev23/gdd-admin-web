@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  LayoutDashboard, BookOpen, Calendar, Ticket, Grid3X3,
+  LayoutDashboard, BookOpen, Ticket, Grid3X3,
   Building2, Compass, MapPin, Car, Tag,
   MessageSquare, Users, Settings, X, BarChart2, ArrowLeftRight, Wallet,
 } from 'lucide-react'
@@ -14,7 +14,7 @@ const navItems = [
     { to: '/bookings', icon: BookOpen, label: 'Bookings' },
   ]},
   { group: 'Event', items: [
-    { to: '/events', icon: Calendar, label: 'Events' },
+    // { to: '/events', icon: Calendar, label: 'Events' }, // disabled — Events page work paused
     { to: '/tickets', icon: Ticket, label: 'Tickets' },
     { to: '/seating', icon: Grid3X3, label: 'Seating' },
   ]},

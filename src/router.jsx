@@ -5,7 +5,7 @@ import LoginPage from '@/pages/LoginPage'
 import ForbiddenPage from '@/pages/ForbiddenPage'
 import DashboardPage from '@/pages/DashboardPage'
 import BookingsPage from '@/pages/BookingsPage'
-import EventsPage from '@/pages/EventsPage'
+// import EventsPage from '@/pages/EventsPage' // disabled — Events page work paused
 import TicketsPage from '@/pages/TicketsPage'
 import SeatingPage from '@/pages/SeatingPage'
 import HotelsPage from '@/pages/HotelsPage'
@@ -41,7 +41,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'bookings', element: <RoleGate roles={managerAndUp}><BookingsPage /></RoleGate> },
-      { path: 'events', element: <EventsPage /> },
+      // { path: 'events', element: <EventsPage /> }, // disabled — Events page work paused
       { path: 'tickets', element: <TicketsPage /> },
       { path: 'seating', element: <RoleGate roles={managerAndUp}><SeatingPage /></RoleGate> },
       { path: 'hotels', element: <HotelsPage /> },

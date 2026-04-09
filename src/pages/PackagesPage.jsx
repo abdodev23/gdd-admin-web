@@ -9,6 +9,8 @@ import {
   useReactivatePackage,
   useDeletePackage,
 } from '@/api/hooks/usePackages'
+import { useHotels } from '@/api/hooks/useHotels'
+import { useTransfers } from '@/api/hooks/useTransfers'
 import PageHeader from '@/components/ui/PageHeader'
 import Modal from '@/components/ui/Modal'
 import ImageUpload from '@/components/ui/ImageUpload'
@@ -52,6 +54,24 @@ const emptyScheduleDay = {
   type:       '',
 }
 
+const emptyIncludedCategories = {
+  tickets:    true,
+  hotels:     true,
+  transfers:  true,
+  activities: true,
+  addons:     false,
+  insurance:  false,
+}
+
+const INCLUDED_CATEGORY_LABELS = [
+  { key: 'tickets',    label: 'Event Tickets' },
+  { key: 'hotels',     label: 'Hotels' },
+  { key: 'transfers',  label: 'Transfers' },
+  { key: 'activities', label: 'Activities' },
+  { key: 'addons',     label: 'Hotel Add-ons' },
+  { key: 'insurance',  label: 'Insurance' },
+]
+
 const emptyItinerary = {
   category:     '',
   subtitle:     '',
@@ -83,6 +103,9 @@ const emptyPackage = {
   baseTransferId:  '',
   baseSightseeing: [],
   image:           '',
+  includedCategories: { ...emptyIncludedCategories },
+  fixedHotelId:    '',
+  fixedTransfer:   { routeId: '', carId: '' },
   hasItinerary:    false,
   itinerary:       { ...emptyItinerary },
 }
@@ -99,6 +122,13 @@ export default function PackagesPage() {
     status,
   })
   const items = data?.data || []
+
+  // Lookup lists for the Fixed Pre-Picks dropdowns. Pull a wide page so the
+  // admin sees every choice without paginating inside the modal.
+  const { data: hotelsResp }    = useHotels({    page: 1, limit: 200, status: 'active' })
+  const { data: transfersResp } = useTransfers({ page: 1, limit: 200, status: 'active' })
+  const hotelOptions    = hotelsResp?.data    || []
+  const transferOptions = transfersResp?.data || []
 
   const createPackage     = useCreatePackage()
   const updatePackage     = useUpdatePackage()
@@ -133,6 +163,12 @@ export default function PackagesPage() {
       baseTransferId:  pkg.baseTransferId || '',
       baseSightseeing: pkg.baseSightseeing || [],
       image:           pkg.image || '',
+      includedCategories: { ...emptyIncludedCategories, ...(pkg.includedCategories || {}) },
+      fixedHotelId:    pkg.fixedHotelId || '',
+      fixedTransfer:   {
+        routeId: pkg.fixedTransfer?.routeId || '',
+        carId:   pkg.fixedTransfer?.carId   || '',
+      },
       hasItinerary:    !!pkg.itinerary,
       itinerary:       pkg.itinerary
         ? {
@@ -193,6 +229,11 @@ export default function PackagesPage() {
       baseTransferId:  form.baseTransferId || null,
       baseSightseeing: form.baseSightseeing,
       image:           form.image,
+      includedCategories: form.includedCategories,
+      fixedHotelId:    form.fixedHotelId || null,
+      fixedTransfer:   (form.fixedTransfer.routeId && form.fixedTransfer.carId)
+        ? { routeId: form.fixedTransfer.routeId, carId: form.fixedTransfer.carId }
+        : null,
       itinerary:       itineraryPayload,
     }
     if (isAdding) {
@@ -524,6 +565,109 @@ export default function PackagesPage() {
             onChange={(url) => setForm({ ...form, image: url })}
             requirements={IMAGE_PROFILES.PACKAGE}
           />
+
+          {/* Included Categories — what is bundled in the package price */}
+          <div className="border-2 border-gold/20 rounded-sm">
+            <div className="px-4 py-3 border-b border-gdd-black/5 bg-gold/5">
+              <h4 className="font-medino text-sm text-gdd-black">Included in Package Price</h4>
+              <p className="font-equip text-[10px] text-gdd-black/40 mt-0.5">
+                Items in checked categories appear in the customer's cart but do not add to their total.
+                Unchecked categories are billed normally.
+              </p>
+            </div>
+            <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {INCLUDED_CATEGORY_LABELS.map(({ key, label }) => (
+                <label key={key} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!form.includedCategories[key]}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        includedCategories: { ...form.includedCategories, [key]: e.target.checked },
+                      })
+                    }
+                    className="w-4 h-4"
+                  />
+                  <span className="font-equip text-sm text-gdd-black/70">{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Fixed Pre-Picks — pre-selected hotel and transfer */}
+          {(form.includedCategories.hotels || form.includedCategories.transfers) && (
+            <div className="border-2 border-gold/20 rounded-sm">
+              <div className="px-4 py-3 border-b border-gdd-black/5 bg-gold/5">
+                <h4 className="font-medino text-sm text-gdd-black">Fixed Pre-Picks</h4>
+                <p className="font-equip text-[10px] text-gdd-black/40 mt-0.5">
+                  These items are pre-selected for the customer. The fixed hotel can be swapped (delta charged);
+                  the fixed transfer can be swapped (full price of new car charged).
+                </p>
+              </div>
+              <div className="p-4 space-y-4">
+                {form.includedCategories.hotels && (
+                  <Field label="Fixed Hotel">
+                    <select
+                      value={form.fixedHotelId}
+                      onChange={(e) => setForm({ ...form, fixedHotelId: e.target.value })}
+                      className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm focus:outline-none focus:ring-1 focus:ring-gold"
+                    >
+                      <option value="">— None —</option>
+                      {hotelOptions.map((h) => (
+                        <option key={h._id || h.hotelId} value={h.hotelId}>
+                          {h.name} ({h.hotelId})
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+                {form.includedCategories.transfers && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Fixed Transfer Route">
+                      <select
+                        value={form.fixedTransfer.routeId}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            fixedTransfer: { routeId: e.target.value, carId: '' },
+                          })
+                        }
+                        className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm focus:outline-none focus:ring-1 focus:ring-gold"
+                      >
+                        <option value="">— None —</option>
+                        {transferOptions.map((t) => (
+                          <option key={t._id || t.routeId} value={t.routeId}>
+                            {t.label} ({t.routeId})
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Fixed Transfer Car">
+                      <select
+                        value={form.fixedTransfer.carId}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            fixedTransfer: { ...form.fixedTransfer, carId: e.target.value },
+                          })
+                        }
+                        disabled={!form.fixedTransfer.routeId}
+                        className="w-full px-4 py-2 border border-gdd-black/10 rounded-sm font-equip text-sm focus:outline-none focus:ring-1 focus:ring-gold disabled:bg-sand-light/50"
+                      >
+                        <option value="">— None —</option>
+                        {(transferOptions.find((t) => t.routeId === form.fixedTransfer.routeId)?.cars || []).map((c) => (
+                          <option key={c.carId} value={c.carId}>
+                            {c.carName}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Embedded Itinerary section */}
           <div className="border-2 border-gold/20 rounded-sm">
