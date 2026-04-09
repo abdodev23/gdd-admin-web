@@ -507,7 +507,7 @@ export default function ActivitiesPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Max Adults (blank = unlimited)">
               <input
                 type="number"

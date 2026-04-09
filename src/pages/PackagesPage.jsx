@@ -461,7 +461,7 @@ export default function PackagesPage() {
             />
           </Field>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Starting Price (optional)">
               <input
                 type="number"
@@ -700,7 +700,7 @@ export default function PackagesPage() {
                   />
                 </Field>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Field label="Duration label">
                     <input
                       type="text"
@@ -729,7 +729,7 @@ export default function PackagesPage() {
                   </Field>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Field label="Check-in">
                     <input
                       type="date"
@@ -791,7 +791,7 @@ export default function PackagesPage() {
                             />
                           </SubField>
                         </div>
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <SubField label="Per Person (DBL)">
                             <input type="number" value={row.perPersonInDouble}
                               onChange={(e) => updatePricingRow(idx, { perPersonInDouble: Number(e.target.value) })}

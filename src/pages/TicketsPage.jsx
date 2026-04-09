@@ -240,7 +240,7 @@ export default function TicketsPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                         <StatItem label="Total" value={total} />
                         <StatItem label="Sold" value={sold} />
                         <StatItem label="Available" value={available} />

@@ -397,7 +397,7 @@ export default function HotelsPage() {
             />
           </Field>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="Stars">
               <select
                 value={form.stars}
@@ -557,7 +557,7 @@ export default function HotelsPage() {
                       />
                     </SubField>
                   </div>
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <SubField label="Bed Type">
                       <input
                         type="text"

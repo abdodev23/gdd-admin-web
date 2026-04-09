@@ -169,7 +169,7 @@ export default function SeatingPage() {
       <PageHeader title="Seating" subtitle="Manage seat assignments and availability" />
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <StatsCard icon={Grid3X3} label="Total Seats" value={stats.total} index={0} />
         <StatsCard icon={Users} label="Sold" value={stats.sold} index={1} />
         <StatsCard icon={Lock} label="Reserved" value={stats.reserved} index={2} />
@@ -196,7 +196,7 @@ export default function SeatingPage() {
                 <h3 className="font-equip font-medium text-lg text-gdd-black">{colors.label}</h3>
                 <span className="font-equip text-xs text-gdd-black/40 ml-auto">{ps.total} seats</span>
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <Stat label="Sold" value={ps.sold} />
                 <Stat label="Held" value={ps.held} />
                 <Stat label="Resv." value={ps.reserved} />
