@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Users, BedDouble, TrendingUp, Download } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import useDataStore from '@/store/useDataStore'
+import { useGuestReport } from '@/api/hooks/useGuestReport'
 import PageHeader from '@/components/ui/PageHeader'
 import DataTable from '@/components/ui/DataTable'
 
@@ -15,7 +15,6 @@ const fadeUp = {
 }
 
 const viewLabels = { pyramid: 'Pyramid', nile: 'Nile', city: 'City' }
-
 const GOLD = '#AC7C43'
 
 const columns = [
@@ -28,7 +27,7 @@ const columns = [
     key: 'stars',
     label: 'Stars',
     render: (val) => (
-      <span className="font-equip text-xs text-gdd-black/60">{'★'.repeat(val)}</span>
+      <span className="font-equip text-xs text-gdd-black/60">{'★'.repeat(val || 0)}</span>
     ),
   },
   {
@@ -39,21 +38,35 @@ const columns = [
     ),
   },
   {
-    key: 'totalRooms',
-    label: 'Total Rooms',
-    render: (val) => <span className="font-equip text-sm text-gdd-black/60">{val}</span>,
+    key: 'adults',
+    label: 'Adults / Children',
+    render: (_val, row) => (
+      <span className="font-equip text-xs text-gdd-black/60">
+        {row.adults ?? 0} / {row.children ?? 0}
+      </span>
+    ),
   },
   {
-    key: 'bookedRooms',
-    label: 'Booked',
+    key: 'bookings',
+    label: 'Bookings',
+    render: (val) => <span className="font-equip text-sm text-gdd-black/70">{val ?? 0}</span>,
+  },
+  {
+    key: 'totalNights',
+    label: 'Total Nights',
+    render: (val) => <span className="font-equip text-sm text-gdd-black/60">{val ?? 0}</span>,
+  },
+  {
+    key: 'bookedRoomNights',
+    label: 'Room-Nights',
     render: (val, row) => {
-      const pct = row.totalRooms > 0 ? Math.round((val / row.totalRooms) * 100) : 0
+      const pct = row.occupancyPct ?? 0
       return (
         <div className="flex items-center gap-2">
           <div className="w-20 h-1.5 bg-gdd-black/5 rounded-full overflow-hidden">
             <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: GOLD }} />
           </div>
-          <span className="font-equip text-xs text-gdd-black/50">{pct}%</span>
+          <span className="font-equip text-xs text-gdd-black/50">{val} ({pct}%)</span>
         </div>
       )
     },
@@ -62,55 +75,51 @@ const columns = [
     key: 'view',
     label: 'View',
     render: (val) => (
-      <span className="font-equip text-xs text-gdd-black/50">{viewLabels[val] ?? val}</span>
+      <span className="font-equip text-xs text-gdd-black/50">{viewLabels[val] ?? val ?? '—'}</span>
     ),
   },
 ]
 
 export default function GuestReportPage() {
-  const { hotels } = useDataStore()
+  const { data, isLoading, isError, refetch } = useGuestReport()
   const [exported, setExported] = useState(false)
 
-  const sorted = useMemo(
-    () => [...hotels].sort((a, b) => (b.guests ?? 0) - (a.guests ?? 0)),
-    [hotels]
+  const rows = data?.rows || []
+  const totals = data?.totals || { totalGuests: 0, hotelsCount: 0, atCapacityCount: 0, avgOccupancyPct: 0 }
+
+  const chartData = useMemo(
+    () => rows.slice(0, 10).map((h) => ({
+      name: h.name.split(' ').slice(0, 2).join(' '),
+      guests: h.guests ?? 0,
+    })),
+    [rows]
   )
-
-  const totalGuests = useMemo(() => hotels.reduce((s, h) => s + (h.guests ?? 0), 0), [hotels])
-
-  const atCapacity = useMemo(
-    () => hotels.filter((h) => h.bookedRooms >= h.totalRooms).length,
-    [hotels]
-  )
-
-  const avgOccupancy = useMemo(() => {
-    if (!hotels.length) return 0
-    const total = hotels.reduce((s, h) => s + (h.totalRooms > 0 ? h.bookedRooms / h.totalRooms : 0), 0)
-    return Math.round((total / hotels.length) * 100)
-  }, [hotels])
-
-  const chartData = sorted.map((h) => ({
-    name: h.name.split(' ').slice(0, 2).join(' '),
-    guests: h.guests ?? 0,
-  }))
 
   const handleExport = () => {
-    const headers = ['Hotel', 'Stars', 'Guests', 'Total Rooms', 'Booked Rooms', 'Occupancy %', 'View']
-    const rows = sorted.map((h) => [
+    const headers = ['Hotel', 'Stars', 'Guests', 'Adults', 'Children', 'Bookings', 'Total Nights', 'Room-Nights', 'Occupancy %', 'Revenue', 'View']
+    const body = rows.map((h) => [
       h.name,
       h.stars,
       h.guests ?? 0,
-      h.totalRooms,
-      h.bookedRooms,
-      h.totalRooms > 0 ? Math.round((h.bookedRooms / h.totalRooms) * 100) : 0,
-      viewLabels[h.view] ?? h.view,
+      h.adults ?? 0,
+      h.children ?? 0,
+      h.bookings ?? 0,
+      h.totalNights ?? 0,
+      h.bookedRoomNights ?? 0,
+      h.occupancyPct ?? 0,
+      h.revenue ?? 0,
+      viewLabels[h.view] ?? h.view ?? '',
     ])
-    const csv = [headers, ...rows].map((r) => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
+    const esc = (v) => {
+      const s = String(v ?? '').replace(/"/g, '""')
+      return /[",\n]/.test(s) ? `"${s}"` : s
+    }
+    const csv = [headers, ...body].map((r) => r.map(esc).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'guest-report.csv'
+    a.download = `guest-report-${Date.now()}.csv`
     a.click()
     URL.revokeObjectURL(url)
     setExported(true)
@@ -121,11 +130,12 @@ export default function GuestReportPage() {
     <div>
       <PageHeader
         title="Hotels Guests Report"
-        subtitle={`${totalGuests} total guests across ${hotels.length} hotels`}
+        subtitle={`${totals.totalGuests} total guests across ${totals.hotelsCount} hotels`}
         action={
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors"
+            disabled={!rows.length}
+            className="flex items-center gap-2 px-4 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             {exported ? 'Exported!' : 'Export CSV'}
@@ -133,12 +143,24 @@ export default function GuestReportPage() {
         }
       />
 
+      {isError && (
+        <div className="bg-white rounded-sm shadow-sm py-16 text-center mb-6">
+          <p className="font-equip text-sm text-red-500 mb-3">Failed to load guest report.</p>
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {[
-          { label: 'Total Guests', value: totalGuests, icon: Users },
-          { label: 'Hotels at Capacity', value: atCapacity, icon: BedDouble },
-          { label: 'Avg Occupancy', value: `${avgOccupancy}%`, icon: TrendingUp },
+          { label: 'Total Guests',        value: totals.totalGuests,         icon: Users },
+          { label: 'Hotels at Capacity',  value: totals.atCapacityCount,     icon: BedDouble },
+          { label: 'Avg Occupancy',       value: `${totals.avgOccupancyPct}%`, icon: TrendingUp },
         ].map((card, i) => (
           <motion.div
             key={card.label}
@@ -162,42 +184,44 @@ export default function GuestReportPage() {
       </div>
 
       {/* Bar Chart */}
-      <motion.div
-        className="bg-white rounded-sm shadow-sm p-6 mb-6"
-        variants={fadeUp}
-        initial="hidden"
-        animate="visible"
-        custom={3}
-      >
-        <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40 mb-4">
-          Guests per Hotel
-        </p>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={chartData} barSize={28}>
-            <XAxis
-              dataKey="name"
-              tick={{ fontFamily: 'Equip, sans-serif', fontSize: 10, fill: '#15151680' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fontFamily: 'Equip, sans-serif', fontSize: 10, fill: '#15151650' }}
-              axisLine={false}
-              tickLine={false}
-              width={30}
-            />
-            <Tooltip
-              contentStyle={{ fontFamily: 'Equip, sans-serif', fontSize: 12, border: 'none', borderRadius: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
-              cursor={{ fill: '#AC7C4310' }}
-            />
-            <Bar dataKey="guests" radius={[2, 2, 0, 0]}>
-              {chartData.map((_, i) => (
-                <Cell key={i} fill={i === 0 ? GOLD : '#AC7C4360'} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </motion.div>
+      {chartData.length > 0 && (
+        <motion.div
+          className="bg-white rounded-sm shadow-sm p-6 mb-6"
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          custom={3}
+        >
+          <p className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40 mb-4">
+            Guests per Hotel (Top 10)
+          </p>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={chartData} barSize={28}>
+              <XAxis
+                dataKey="name"
+                tick={{ fontFamily: 'Equip, sans-serif', fontSize: 10, fill: '#15151680' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontFamily: 'Equip, sans-serif', fontSize: 10, fill: '#15151650' }}
+                axisLine={false}
+                tickLine={false}
+                width={30}
+              />
+              <Tooltip
+                contentStyle={{ fontFamily: 'Equip, sans-serif', fontSize: 12, border: 'none', borderRadius: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+                cursor={{ fill: '#AC7C4310' }}
+              />
+              <Bar dataKey="guests" radius={[2, 2, 0, 0]}>
+                {chartData.map((_, i) => (
+                  <Cell key={i} fill={i === 0 ? GOLD : '#AC7C4360'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </motion.div>
+      )}
 
       {/* Table */}
       <motion.div
@@ -212,7 +236,7 @@ export default function GuestReportPage() {
             All Hotels — sorted by guests
           </p>
         </div>
-        <DataTable columns={columns} data={sorted} emptyMessage="No hotels found" />
+        <DataTable columns={columns} data={rows} loading={isLoading} emptyMessage="No hotel bookings yet" />
       </motion.div>
     </div>
   )

@@ -14,15 +14,7 @@ const fadeUp = {
   }),
 }
 
-// Charts are still placeholder data — Phase 5 swaps these for real aggregations
-const placeholderRevenueData = [
-  { month: 'Jan', revenue: 0 },
-  { month: 'Feb', revenue: 0 },
-  { month: 'Mar', revenue: 0 },
-  { month: 'Apr', revenue: 0 },
-  { month: 'May', revenue: 0 },
-  { month: 'Jun', revenue: 0 },
-]
+const tierColors = ['#D4985A', '#A25723', '#C5A44E', '#CCBEAA', '#151516']
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -33,6 +25,9 @@ const CustomTooltip = ({ active, payload, label }) => {
     </div>
   )
 }
+
+const formatDate = (iso) =>
+  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
 
 export default function DashboardPage() {
   const navigate = useNavigate()
@@ -53,12 +48,21 @@ export default function DashboardPage() {
     { name: 'Available', value: seatStats.available, fill: '#CCBEAA' },
   ].filter((d) => d.value > 0)
 
-  // Bookings-by-status bar chart from real counts
-  const bookingsBars = stats ? [
-    { tier: 'Confirmed', count: stats.bookings.confirmed, fill: '#22c55e' },
-    { tier: 'Pending',   count: stats.bookings.pending,   fill: '#D4985A' },
-    { tier: 'Cancelled', count: stats.bookings.cancelled, fill: '#ef4444' },
-  ] : []
+  // Bookings-by-tier bar chart from real aggregation
+  const bookingsBars = (stats?.bookingsByTier || []).map((t, i) => ({
+    tier:    t.tier === 'none' ? 'Untiered' : t.tier,
+    count:   t.count,
+    revenue: t.revenue,
+    fill:    tierColors[i % tierColors.length],
+  }))
+
+  // Revenue-by-day area chart — always 30 points from the backend
+  const revenueData = (stats?.revenueByDay || []).map((p) => ({
+    month:   p.label,
+    revenue: p.amount,
+  }))
+
+  const recentBookings = stats?.recentBookings || []
 
   return (
     <div>
@@ -92,14 +96,16 @@ export default function DashboardPage() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-        {/* Revenue Trend (placeholder until Phase 5) */}
+        {/* Revenue Trend — last 30 days from FinancialLog */}
         <motion.div className="lg:col-span-2 bg-white p-6 rounded-sm shadow-sm" variants={fadeUp} initial="hidden" animate="visible" custom={4}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40">Revenue Trend</h3>
-            <span className="font-equip text-[9px] tracking-widest-plus uppercase text-gdd-black/30">Coming in Phase 5</span>
+            <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40">Revenue — Last 30 Days</h3>
+            <span className="font-equip text-[9px] tracking-widest-plus uppercase text-gdd-black/30">
+              {formatCurrency(revenueData.reduce((s, p) => s + p.revenue, 0))}
+            </span>
           </div>
           <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={placeholderRevenueData}>
+            <AreaChart data={revenueData}>
               <defs>
                 <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#D4985A" stopOpacity={0.2} />
@@ -115,9 +121,9 @@ export default function DashboardPage() {
           </ResponsiveContainer>
         </motion.div>
 
-        {/* Bookings by Status — real data */}
+        {/* Bookings by Tier — real aggregation */}
         <motion.div className="bg-white p-6 rounded-sm shadow-sm" variants={fadeUp} initial="hidden" animate="visible" custom={5}>
-          <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-4">Bookings by Status</h3>
+          <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-4">Bookings by Tier</h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={bookingsBars} barSize={32}>
               <CartesianGrid strokeDasharray="3 3" stroke="#15151608" vertical={false} />
@@ -206,15 +212,53 @@ export default function DashboardPage() {
         </motion.div>
       </div>
 
-      {/* Recent Bookings — placeholder until Phase 3 */}
+      {/* Recent Bookings — last 10 confirmed */}
       <motion.div className="bg-white rounded-sm shadow-sm p-6" variants={fadeUp} initial="hidden" animate="visible" custom={8}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40">Recent Bookings</h3>
-          <span className="font-equip text-[9px] tracking-widest-plus uppercase text-gdd-black/30">Wired in Phase 3</span>
+          <button
+            onClick={() => navigate('/bookings')}
+            className="font-equip text-[10px] tracking-widest-plus uppercase text-gdd-black/40 hover:text-gold transition-colors"
+          >
+            View all →
+          </button>
         </div>
-        <p className="font-equip text-xs text-gdd-black/30 text-center py-8">
-          The bookings table will appear here once Phase 3 wires the bookings API.
-        </p>
+        {recentBookings.length === 0 ? (
+          <p className="font-equip text-xs text-gdd-black/30 text-center py-8">
+            No bookings yet.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gdd-black/5">
+                  <th className="text-left font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 py-2">Ref</th>
+                  <th className="text-left font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 py-2">Guest</th>
+                  <th className="text-left font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 py-2">Tier</th>
+                  <th className="text-left font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 py-2">Date</th>
+                  <th className="text-right font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 py-2">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentBookings.map((b) => (
+                  <tr
+                    key={b._id}
+                    onClick={() => navigate('/bookings')}
+                    className="border-b border-gdd-black/5 hover:bg-sand-light/30 cursor-pointer transition-colors"
+                  >
+                    <td className="py-3 font-equip text-xs font-medium tracking-widest-plus uppercase text-gdd-black">{b.ref}</td>
+                    <td className="py-3 font-equip text-xs text-gdd-black/70">
+                      {[b.guestFirstName, b.guestLastName].filter(Boolean).join(' ') || b.guestEmail || '—'}
+                    </td>
+                    <td className="py-3 font-equip text-xs text-gdd-black/60">{b.ticketTier || '—'}</td>
+                    <td className="py-3 font-equip text-xs text-gdd-black/60">{formatDate(b.createdAt)}</td>
+                    <td className="py-3 text-right font-equip text-xs font-medium text-gdd-black">{formatCurrency(b.total || 0)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </motion.div>
     </div>
   )

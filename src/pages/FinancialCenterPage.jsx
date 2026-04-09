@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { DollarSign, FileText, Clock, AlertCircle } from 'lucide-react'
-import useDataStore from '@/store/useDataStore'
+import { DollarSign, FileText, TrendingDown, Download, RefreshCw } from 'lucide-react'
+import { useFinances, useFinancesSummary, downloadFinancesCsv, useBackfillFinances } from '@/api/hooks/useFinances'
 import PageHeader from '@/components/ui/PageHeader'
 import StatsCard from '@/components/ui/StatsCard'
 import DataTable from '@/components/ui/DataTable'
 import Modal from '@/components/ui/Modal'
-import StatusBadge from '@/components/ui/StatusBadge'
 import SearchInput from '@/components/ui/SearchInput'
+import Select from '@/components/ui/Select'
 import { formatCurrency } from '@/utils/formatCurrency'
 import { cn } from '@/utils/cn'
 
@@ -19,116 +19,161 @@ const fadeUp = {
   }),
 }
 
+// Each tab maps to a finances filter. `all` omits category + action.
 const tabs = [
-  { value: 'all', label: 'All' },
-  { value: 'paid', label: 'Paid' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'failed', label: 'Failed' },
-  { value: 'refunded', label: 'Refunded' },
-  { value: 'rejected', label: 'Rejected' },
+  { value: 'all',       label: 'All' },
+  { value: 'ticket',    label: 'Tickets' },
+  { value: 'package',   label: 'Packages' },
+  { value: 'hotel',     label: 'Hotels' },
+  { value: 'activity',  label: 'Activities' },
+  { value: 'transfer',  label: 'Transfers' },
+  { value: 'insurance', label: 'Insurance' },
+  { value: 'discount',  label: 'Discounts' },
+  { value: 'refund',    label: 'Refunds' },
 ]
 
-const statusMap = {
-  paid: 'confirmed',
-  pending: 'pending',
-  failed: 'cancelled',
-  refunded: 'refunded',
-  rejected: 'cancelled',
+const categoryBadgeColors = {
+  ticket:    'bg-gold/10 text-gold-deep',
+  package:   'bg-gold/10 text-gold-deep',
+  hotel:     'bg-status-blue/10 text-status-blue',
+  activity:  'bg-status-green/10 text-status-green',
+  transfer:  'bg-purple-100 text-purple-700',
+  insurance: 'bg-orange-100 text-orange-700',
+  discount:  'bg-gdd-black/10 text-gdd-black/70',
+  refund:    'bg-red-100 text-red-700',
 }
 
-const typeBadgeColors = {
-  Ticket: 'bg-gold/10 text-gold-deep',
-  Hotel: 'bg-status-blue/10 text-status-blue',
-  Activity: 'bg-status-green/10 text-status-green',
-  Transfer: 'bg-purple-100 text-purple-700',
-  Insurance: 'bg-orange-100 text-orange-700',
-}
+const actionOptions = [
+  { value: '',        label: 'All Actions' },
+  { value: 'revenue', label: 'Revenue' },
+  { value: 'refund',  label: 'Refund' },
+]
 
-const typePrefixes = {
-  Ticket: 'TK',
-  Hotel: 'HT',
-  Activity: 'ACT',
-  Transfer: 'TRF',
-  Insurance: 'INS',
-}
+const formatDate = (iso) =>
+  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
+
+const formatDateTime = (iso) =>
+  iso ? new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
 
 const columns = [
-  { key: 'id', label: 'Log ID', cellClassName: 'font-medium text-gdd-black', render: (val) => (
-    <span className="font-equip text-xs font-medium tracking-widest-plus uppercase">{val}</span>
-  )},
-  { key: 'type', label: 'Type', render: (val) => (
-    <span className={cn('inline-block px-2 py-0.5 rounded-sm font-equip text-[10px] font-medium tracking-widest-plus uppercase', typeBadgeColors[val] || 'bg-gdd-black/5 text-gdd-black/60')}>
-      {val}
-    </span>
-  )},
-  { key: 'customerName', label: 'Customer' },
-  { key: 'description', label: 'Description', render: (val) => (
-    <span className="max-w-[200px] truncate block" title={val}>{val}</span>
-  )},
-  { key: 'amount', label: 'Amount', render: (val) => formatCurrency(val) },
-  { key: 'status', label: 'Status', render: (val) => <StatusBadge status={statusMap[val] || val} /> },
-  { key: 'isDiscounted', label: 'Discount', render: (val, row) => val ? (
-    <span className="font-equip text-xs text-gold-deep">{row.discountMethod}</span>
-  ) : (
-    <span className="text-gdd-black/25 italic">--</span>
-  )},
-  { key: 'lastActivity', label: 'Last Activity', render: (val) => val ? (
-    <div>
-      <p className="font-equip text-xs text-gdd-black">{val.action}</p>
-      <p className="font-equip text-[10px] text-gdd-black/40">{val.admin}</p>
-    </div>
-  ) : <span className="text-gdd-black/25 italic">--</span> },
-  { key: 'paymentInvoice', label: 'Invoice', render: (val) => val ? (
-    <a href={val} target="_blank" rel="noopener noreferrer" className="font-equip text-xs text-gold-deep hover:underline" onClick={(e) => e.stopPropagation()}>
-      Download
-    </a>
-  ) : (
-    <span className="text-gdd-black/25">&mdash;</span>
-  )},
+  {
+    key: 'processedAt',
+    label: 'Date',
+    render: (val) => (
+      <span className="font-equip text-xs text-gdd-black/70">{formatDate(val)}</span>
+    ),
+  },
+  {
+    key: 'bookingRef',
+    label: 'Booking',
+    cellClassName: 'font-medium text-gdd-black',
+    render: (val) => (
+      <span className="font-equip text-xs font-medium tracking-widest-plus uppercase">
+        {val || '—'}
+      </span>
+    ),
+  },
+  {
+    key: 'category',
+    label: 'Category',
+    render: (val) => (
+      <span
+        className={cn(
+          'inline-block px-2 py-0.5 rounded-sm font-equip text-[10px] font-medium tracking-widest-plus uppercase',
+          categoryBadgeColors[val] || 'bg-gdd-black/5 text-gdd-black/60'
+        )}
+      >
+        {val || '—'}
+      </span>
+    ),
+  },
+  {
+    key: 'itemLabel',
+    label: 'Description',
+    render: (val) => (
+      <span className="max-w-[260px] truncate block" title={val}>{val || '—'}</span>
+    ),
+  },
+  {
+    key: 'vendor',
+    label: 'Vendor',
+    render: (val) => <span className="font-equip text-xs text-gdd-black/60">{val || '—'}</span>,
+  },
+  {
+    key: 'amount',
+    label: 'Amount',
+    render: (val, row) => (
+      <span className={cn('font-equip text-sm font-medium', val < 0 ? 'text-red-600' : 'text-gdd-black')}>
+        {val < 0 ? '-' : ''}{formatCurrency(Math.abs(val))}{row.currency && row.currency !== 'USD' ? ` ${row.currency}` : ''}
+      </span>
+    ),
+  },
 ]
 
 export default function FinancialCenterPage() {
-  const { financialLog } = useDataStore()
+  const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState('all')
-  const [selectedEntry, setSelectedEntry] = useState(null)
+  const [action, setAction] = useState('')
+  const [selectedRow, setSelectedRow] = useState(null)
 
-  const stats = useMemo(() => {
-    const paidEntries = financialLog.filter((e) => e.status === 'paid')
-    const totalRevenue = paidEntries.reduce((sum, e) => sum + e.amount, 0)
-    const paidCount = paidEntries.length
-    const pendingCount = financialLog.filter((e) => e.status === 'pending').length
-    const failedRejectedCount = financialLog.filter((e) => e.status === 'failed' || e.status === 'rejected').length
-    return { totalRevenue, paidCount, pendingCount, failedRejectedCount }
-  }, [financialLog])
+  // Build filter params shared by list + summary so the header numbers always
+  // match what's in the table.
+  const filterParams = useMemo(() => ({
+    ...(search && { search }),
+    ...(activeTab !== 'all' && { category: activeTab }),
+    ...(action && { action }),
+  }), [search, activeTab, action])
 
-  const filtered = useMemo(() => {
-    let result = [...financialLog]
-    if (activeTab !== 'all') result = result.filter((e) => e.status === activeTab)
-    if (search) {
-      const q = search.toLowerCase()
-      result = result.filter((e) =>
-        e.customerName.toLowerCase().includes(q) ||
-        e.id.toLowerCase().includes(q) ||
-        e.bookingRef.toLowerCase().includes(q)
-      )
-    }
-    return result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-  }, [financialLog, activeTab, search])
+  const listParams = { page, limit: 25, ...filterParams }
+
+  const { data, isLoading, isError, refetch } = useFinances(listParams)
+  const { data: summary } = useFinancesSummary(filterParams)
+  const backfill = useBackfillFinances()
+
+  const rows = data?.data || []
+  const total = data?.total || 0
+
+  const totals = summary?.totals || { gross: 0, refunds: 0, net: 0, rows: 0 }
+
+  const hasFilters = search || activeTab !== 'all' || action
+  const clearFilters = () => {
+    setSearch('')
+    setActiveTab('all')
+    setAction('')
+    setPage(1)
+  }
+
+  const handleExport = () => {
+    downloadFinancesCsv(filterParams).catch((err) => {
+      console.error('CSV export failed', err)
+    })
+  }
 
   return (
     <div>
       <PageHeader
         title="Financial Center"
-        subtitle="Track all bookings, payments and invoices"
+        subtitle="Revenue, refunds and invoices — generated from confirmed bookings"
+        action={
+          <button
+            onClick={() => backfill.mutate()}
+            disabled={backfill.isPending}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/70 rounded-sm hover:bg-sand-light/50 transition-colors disabled:opacity-50"
+            title="Generate revenue rows for any pre-existing bookings that don't have them yet. Safe to re-run."
+          >
+            <RefreshCw className={cn('w-3.5 h-3.5', backfill.isPending && 'animate-spin')} />
+            {backfill.isPending ? 'Backfilling…' : 'Backfill Historical'}
+          </button>
+        }
       />
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatsCard icon={DollarSign} label="Total Revenue" value={formatCurrency(stats.totalRevenue)} index={0} />
-        <StatsCard icon={FileText} label="Paid" value={stats.paidCount} index={1} />
-        <StatsCard icon={Clock} label="Pending" value={stats.pendingCount} index={2} />
-        <StatsCard icon={AlertCircle} label="Failed / Rejected" value={stats.failedRejectedCount} index={3} />
+        <StatsCard icon={DollarSign} label="Gross Revenue" value={formatCurrency(totals.gross)} index={0} />
+        <StatsCard icon={TrendingDown} label="Refunds" value={formatCurrency(Math.abs(totals.refunds))} index={1} />
+        <StatsCard icon={DollarSign} label="Net" value={formatCurrency(totals.net)} index={2} />
+        <StatsCard icon={FileText} label="Rows" value={totals.rows} index={3} />
       </div>
 
       {/* Filter Tabs + Search + Table */}
@@ -138,7 +183,7 @@ export default function FinancialCenterPage() {
             {tabs.map((tab) => (
               <button
                 key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
+                onClick={() => { setActiveTab(tab.value); setPage(1) }}
                 className={cn(
                   'px-3 py-1.5 font-equip text-xs rounded-sm transition-colors whitespace-nowrap',
                   activeTab === tab.value
@@ -150,34 +195,91 @@ export default function FinancialCenterPage() {
               </button>
             ))}
           </div>
-          <SearchInput value={search} onChange={setSearch} placeholder="Search by name, ID, booking ref..." className="w-full sm:w-72 sm:ml-auto" />
+          <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+            <Select
+              value={action}
+              onChange={(v) => { setAction(v); setPage(1) }}
+              options={actionOptions}
+              placeholder=""
+              className="w-36"
+            />
+            <SearchInput
+              value={search}
+              onChange={(v) => { setSearch(v); setPage(1) }}
+              placeholder="Booking ref, label, vendor…"
+              className="w-full sm:w-72"
+            />
+            {hasFilters && (
+              <button
+                onClick={clearFilters}
+                className="px-3 py-2 border border-gdd-black/10 font-equip text-xs uppercase tracking-widest-plus text-gdd-black/60 rounded-sm hover:bg-sand-light/50 transition-colors whitespace-nowrap"
+              >
+                Clear
+              </button>
+            )}
+            <button
+              onClick={handleExport}
+              className="inline-flex items-center gap-2 px-3 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors whitespace-nowrap"
+            >
+              <Download className="w-3.5 h-3.5" />
+              CSV
+            </button>
+          </div>
         </div>
-        <DataTable columns={columns} data={filtered} onRowClick={(row) => setSelectedEntry(row)} emptyMessage="No financial records found" />
+
+        {isError ? (
+          <div className="py-16 text-center">
+            <p className="font-equip text-sm text-red-500 mb-3">Failed to load financial log.</p>
+            <button
+              onClick={() => refetch()}
+              className="px-4 py-2 bg-gdd-black text-white font-equip text-xs uppercase tracking-widest-plus rounded-sm hover:bg-gdd-black/90 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={rows}
+            loading={isLoading}
+            onRowClick={(row) => setSelectedRow(row)}
+            emptyMessage="No financial rows match your filters"
+            page={page}
+            limit={25}
+            total={total}
+            onPageChange={setPage}
+          />
+        )}
       </motion.div>
 
       {/* Detail Modal */}
-      <Modal isOpen={!!selectedEntry} onClose={() => setSelectedEntry(null)} title={`Financial Log — ${selectedEntry?.id}`} size="lg">
-        {selectedEntry && (
+      <Modal
+        isOpen={!!selectedRow}
+        onClose={() => setSelectedRow(null)}
+        title={`Financial Row — ${selectedRow?.bookingRef || selectedRow?._id || ''}`}
+        size="lg"
+      >
+        {selectedRow && (
           <div className="space-y-6">
             <div>
-              <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Entry Details</h3>
+              <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Row</h3>
               <div className="grid grid-cols-2 gap-3">
-                <DetailRow label="Log ID" value={selectedEntry.id} />
-                <DetailRow label="Booking Ref" value={selectedEntry.bookingRef} />
-                <DetailRow label="Type" value={
-                  <span className={cn('inline-block px-2 py-0.5 rounded-sm font-equip text-[10px] font-medium tracking-widest-plus uppercase', typeBadgeColors[selectedEntry.type])}>
-                    {typePrefixes[selectedEntry.type]}
-                  </span>
-                } />
-                <DetailRow label="Status" value={<StatusBadge status={statusMap[selectedEntry.status] || selectedEntry.status} />} />
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Customer</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <DetailRow label="Name" value={selectedEntry.customerName} />
-                <DetailRow label="Email" value={selectedEntry.email} />
+                <DetailRow label="Booking Ref" value={selectedRow.bookingRef || '—'} />
+                <DetailRow
+                  label="Category"
+                  value={
+                    <span
+                      className={cn(
+                        'inline-block px-2 py-0.5 rounded-sm font-equip text-[10px] font-medium tracking-widest-plus uppercase',
+                        categoryBadgeColors[selectedRow.category] || 'bg-gdd-black/5 text-gdd-black/60'
+                      )}
+                    >
+                      {selectedRow.category || '—'}
+                    </span>
+                  }
+                />
+                <DetailRow label="Action" value={selectedRow.action || '—'} />
+                <DetailRow label="Currency" value={selectedRow.currency || 'USD'} />
               </div>
             </div>
 
@@ -186,47 +288,47 @@ export default function FinancialCenterPage() {
               <div className="space-y-2 bg-sand-light/30 p-4 rounded-sm">
                 <div className="flex justify-between font-equip text-sm text-gdd-black/70">
                   <span>Description</span>
-                  <span>{selectedEntry.description}</span>
+                  <span className="text-right max-w-[60%]">{selectedRow.itemLabel}</span>
                 </div>
                 <div className="flex justify-between font-equip text-sm text-gdd-black/70">
                   <span>Amount</span>
-                  <span className="font-medium text-gdd-black">{formatCurrency(selectedEntry.amount)}</span>
+                  <span className={cn('font-medium', selectedRow.amount < 0 ? 'text-red-600' : 'text-gdd-black')}>
+                    {selectedRow.amount < 0 ? '-' : ''}{formatCurrency(Math.abs(selectedRow.amount))}
+                  </span>
                 </div>
-                {selectedEntry.isDiscounted && (
-                  <>
-                    <div className="flex justify-between font-equip text-sm text-gdd-black/70">
-                      <span>Discount Method</span>
-                      <span className="text-gold-deep">{selectedEntry.discountMethod}</span>
-                    </div>
-                    <div className="flex justify-between font-equip text-sm text-gdd-black/70">
-                      <span>Discount Amount</span>
-                      <span className="text-status-red">-{formatCurrency(selectedEntry.discountAmount)}</span>
-                    </div>
-                  </>
+                {!!selectedRow.commission && (
+                  <div className="flex justify-between font-equip text-sm text-gdd-black/70">
+                    <span>Commission</span>
+                    <span>{formatCurrency(selectedRow.commission)}</span>
+                  </div>
+                )}
+                {selectedRow.vendor && (
+                  <div className="flex justify-between font-equip text-sm text-gdd-black/70">
+                    <span>Vendor</span>
+                    <span>{selectedRow.vendor}</span>
+                  </div>
                 )}
               </div>
             </div>
 
             <div>
-              <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Last Activity</h3>
+              <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Audit</h3>
               <div className="grid grid-cols-2 gap-3">
-                <DetailRow label="Admin" value={selectedEntry.lastActivity?.admin || '—'} />
-                <DetailRow label="Action" value={selectedEntry.lastActivity?.action || '—'} />
-                <DetailRow label="Date" value={selectedEntry.lastActivity?.date ? new Date(selectedEntry.lastActivity.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'} />
+                <DetailRow label="Processed By" value={selectedRow.processedBy || 'system'} />
+                <DetailRow label="Processed At" value={formatDateTime(selectedRow.processedAt)} />
+                <DetailRow label="Created At" value={formatDateTime(selectedRow.createdAt)} />
+                <DetailRow label="Updated At" value={formatDateTime(selectedRow.updatedAt)} />
               </div>
             </div>
 
-            {selectedEntry.paymentInvoice && (
+            {selectedRow.meta && Object.keys(selectedRow.meta).length > 0 && (
               <div>
-                <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Invoice</h3>
-                <a href={selectedEntry.paymentInvoice} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 bg-gdd-black text-white font-equip text-sm rounded-sm hover:bg-gdd-black/90 transition-colors">
-                  <FileText className="w-4 h-4" />
-                  Download Invoice
-                </a>
+                <h3 className="font-equip text-[10px] font-medium tracking-widest-plus uppercase text-gdd-black/40 mb-3">Meta</h3>
+                <pre className="bg-sand-light/30 p-4 rounded-sm font-equip text-xs text-gdd-black/70 overflow-x-auto">
+{JSON.stringify(selectedRow.meta, null, 2)}
+                </pre>
               </div>
             )}
-
-            <DetailRow label="Created At" value={new Date(selectedEntry.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} />
           </div>
         )}
       </Modal>
